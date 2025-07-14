@@ -1,1 +1,1 @@
-# CLI command modules for app management
+# CLI command modules for platform management

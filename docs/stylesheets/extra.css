@@ -1,0 +1,864 @@
+/* Main theme colors - using the gradient blue to purple colors from the sample */
+:root {
+    --md-primary-fg-color: #1e293b;
+    --md-primary-fg-color--light: #475569;
+    --md-primary-fg-color--dark: #0c253e;
+    --md-accent-fg-color: #3b82f6;
+    --md-typeset-a-color: #3b82f6;
+    --md-gradient-start: #3b82f6;
+    --md-gradient-mid: #8b5cf6;
+    --md-gradient-end: #ec4899;
+
+    /* Light mode specific colors */
+    --md-bg-color: #f8fafc;
+    --md-bg-color-light: #ffffff;
+    --md-text-color: #1e293b;
+    --md-text-color-secondary: #475569;
+    --md-border-color: #e2e8f0;
+    --md-shadow-color: rgba(0, 0, 0, 0.08);
+    --md-code-bg-color: #272822;
+    --md-code-fg-color: #f8f8f2;
+    --md-table-header-bg: #f1f5f9;
+
+    /* Animation durations */
+    --md-transition-fast: 0.15s;
+    --md-transition-medium: 0.3s;
+    --md-transition-slow: 0.5s;
+
+    /* Effect parameters */
+    --md-blur-radius: 10px;
+    --md-glow-intensity: 0.1;
+}
+
+/* 3D Card Effect for special elements */
+.feature-card {
+    background-color: var(--md-bg-color-light);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px var(--md-shadow-color);
+    padding: 20px;
+    margin: 20px 0;
+    transition: all var(--md-transition-medium) ease;
+    transform-style: preserve-3d;
+    perspective: 1000px;
+}
+
+.feature-card:hover {
+    transform: rotateY(5deg) rotateX(5deg);
+    box-shadow: 20px 20px 30px -10px var(--md-shadow-color);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--md-bg-color);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--md-accent-fg-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(var(--md-gradient-start), var(--md-gradient-mid));
+}
+
+/* Floating Action Button */
+.md-fab {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--md-gradient-start), var(--md-gradient-mid));
+    color: white;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--md-transition-medium) cubic-bezier(0.23, 1, 0.32, 1);
+    z-index: 10;
+}
+
+.md-fab:hover {
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Text selection styling */
+::selection {
+    background-color: var(--md-accent-fg-color);
+    color: white;
+}
+
+/* Loading animation */
+@keyframes loading {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.loading::after {
+    content: '';
+    display: block;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 3px solid var(--md-accent-fg-color);
+    border-top-color: transparent;
+    animation: loading 1s infinite linear;
+}
+
+/* Image styling */
+.md-typeset img {
+    border-radius: 8px;
+    transition: all var(--md-transition-medium) ease;
+    box-shadow: 0 4px 12px var(--md-shadow-color);
+}
+
+.md-typeset img:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 24px var(--md-shadow-color);
+}
+
+/* Link hover effects */
+.md-content a:not(.md-button) {
+    position: relative;
+    text-decoration: none;
+    font-weight: 500;
+    background-image: linear-gradient(transparent 60%, rgba(59, 130, 246, 0.1) 40%);
+    background-size: 0% 100%;
+    background-position-x: right;
+    background-repeat: no-repeat;
+    transition: background-size var(--md-transition-medium) ease;
+}
+
+.md-content a:not(.md-button):hover {
+    background-size: 100% 100%;
+    background-position-x: left;
+}
+
+/* Hero section for landing pages */
+.hero {
+    padding: 4rem 2rem;
+    margin: -24px -24px 24px -24px;
+    background: linear-gradient(135deg, var(--md-gradient-start), var(--md-gradient-mid));
+    color: white;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+    z-index: 0;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 1;
+}
+
+.hero h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.hero p {
+    font-size: 1.25rem;
+    max-width: 700px;
+    margin: 0 auto 2rem;
+}
+
+/* Keyboard key styling */
+.md-typeset kbd {
+    padding: 0.2em 0.6em;
+    border-radius: 4px;
+    border: 1px solid var(--md-border-color);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    background-color: var(--md-bg-color-light);
+    color: var(--md-text-color);
+    font-family: 'Fira Code', monospace;
+    font-size: 0.9em;
+    white-space: nowrap;
+    vertical-align: middle;
+    transition: all var(--md-transition-fast) ease;
+}
+
+.md-typeset kbd:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Fix for code copy button in dark mode */
+[data-md-color-scheme="slate"] .md-clipboard {
+    color: var(--md-text-color-secondary);
+}
+
+[data-md-color-scheme="slate"] .md-clipboard:hover {
+    color: var(--md-accent-fg-color);
+}
+
+/* Fix for search results in dark mode */
+[data-md-color-scheme="slate"] .md-search-result__article {
+    background-color: var(--md-bg-color-light);
+}
+
+[data-md-color-scheme="slate"] .md-search-result__meta {
+    color: var(--md-text-color-secondary);
+}
+
+[data-md-color-scheme="slate"] .md-search-result__teaser {
+    color: var(--md-text-color-secondary);
+}
+
+/* Fix for ToC in dark mode */
+[data-md-color-scheme="slate"] .md-nav__link {
+    color: var(--md-text-color-secondary);
+}
+
+[data-md-color-scheme="slate"] .md-nav__link--active,
+[data-md-color-scheme="slate"] .md-nav__link:hover {
+    color: var(--md-accent-fg-color);
+}
+
+/* Animated navigation highlights */
+.md-nav__link {
+    position: relative;
+    transition: color var(--md-transition-fast) ease-in-out;
+}
+
+.md-nav__link::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -2px;
+    left: 0;
+    background: linear-gradient(90deg, var(--md-gradient-start), var(--md-gradient-mid));
+    transition: width var(--md-transition-medium) ease;
+    opacity: 0;
+}
+
+.md-nav__link:hover::after,
+.md-nav__link--active::after {
+    width: 100%;
+    opacity: 1;
+}
+
+/* Ensure tables look good in both modes */
+.md-typeset__scrollwrap {
+    background-color: var(--md-bg-color);
+}
+
+/* Add cool code copy button animation */
+.md-clipboard {
+    transition: all var(--md-transition-fast) ease;
+    opacity: 0.5;
+}
+
+.md-clipboard:hover {
+    transform: scale(1.2);
+    opacity: 1;
+    background-color: var(--md-accent-fg-color);
+    color: white;
+    border-radius: 50%;
+}
+
+/* Add tab animations */
+.md-tabs__item {
+    position: relative;
+    transition: all var(--md-transition-fast) ease;
+}
+
+.md-tabs__item::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 3px;
+    bottom: 0;
+    left: 50%;
+    background: linear-gradient(90deg, var(--md-gradient-start), var(--md-gradient-mid));
+    transition: all var(--md-transition-medium) ease;
+    opacity: 0;
+    border-radius: 3px;
+}
+
+.md-tabs__item:hover::after,
+.md-tabs__item--active::after {
+    width: 80%;
+    left: 10%;
+    opacity: 1;
+}
+
+.md-tabs__item--active {
+    font-weight: 600;
+}
+
+/* Ensure inline code looks good in both modes */
+.md-typeset :not(pre) > code {
+    background-color: var(--md-code-bg-color);
+    color: var(--md-code-fg-color);
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    transition: all var(--md-transition-fast) ease;
+}
+
+.md-typeset :not(pre) > code:hover {
+    background: linear-gradient(120deg, var(--md-gradient-start), var(--md-gradient-mid));
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* Add scroll animations */
+.md-grid {
+    opacity: 0;
+    animation: fadeIn var(--md-transition-slow) forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Section transitions */
+.md-content__inner > * {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: sectionFadeIn var(--md-transition-medium) forwards;
+    animation-delay: calc(var(--md-transition-medium) * 0.5);
+}
+
+@keyframes sectionFadeIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Add glass morphism effect for modern UI components */
+.md-typeset blockquote {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 10px;
+    border-left: 4px solid var(--md-accent-fg-color);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    padding: 1em;
+    margin: 1.5em 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.md-typeset blockquote::before {
+    content: """;
+    font-family: Georgia, serif;
+    font-size: 5em;
+    position: absolute;
+    right: 10px;
+    top: -20px;
+    opacity: 0.1;
+    color: var(--md-accent-fg-color);
+}
+
+/* Dark mode colors */
+[data-md-color-scheme="slate"] {
+    --md-primary-fg-color: #0f172a;
+    --md-primary-fg-color--light: #1e293b;
+    --md-primary-fg-color--dark: #020617;
+    --md-accent-fg-color: #60a5fa;
+    --md-typeset-a-color: #60a5fa;
+    --md-gradient-start: #60a5fa;
+    --md-gradient-mid: #a78bfa;
+    --md-gradient-end: #f472b6;
+
+    /* Dark mode specific colors */
+    --md-bg-color: #0f172a;
+    --md-bg-color-light: #1e293b;
+    --md-text-color: #e2e8f0;
+    --md-text-color-secondary: #94a3b8;
+    --md-border-color: #334155;
+    --md-shadow-color: rgba(0, 0, 0, 0.25);
+    --md-code-bg-color: #1e293b;
+    --md-code-fg-color: #e2e8f0;
+    --md-table-header-bg: #1e293b;
+}
+
+/* Typography */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Content styling */
+.md-content {
+    --md-typeset-a-color: var(--md-accent-fg-color);
+    background-color: var(--md-bg-color);
+    color: var(--md-text-color);
+}
+
+.md-nav {
+    --md-typeset-a-color: var(--md-accent-fg-color);
+    color: var(--md-text-color);
+}
+
+/* Headings */
+.md-typeset h1 {
+    font-size: 32px;
+    font-weight: 700;
+    margin-top: 1em;
+    position: relative;
+    background: none;
+    color: var(--md-text-color);
+    border-bottom: 3px solid;
+    border-image: linear-gradient(90deg, var(--md-gradient-start), var(--md-gradient-mid)) 1;
+    display: inline-block;
+    padding-bottom: 8px;
+}
+
+/* Dark mode specific adjustments for headings */
+[data-md-color-scheme="slate"] .md-typeset h1 {
+    color: white;
+    /* Brighter gradient for better visibility on dark backgrounds */
+    border-image: linear-gradient(90deg,
+        rgba(96, 165, 250, 1), /* Brighter blue */
+        rgba(167, 139, 250, 1) /* Brighter purple */
+    ) 1;
+}
+
+@keyframes gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Add a subtle glow effect to h1 headings */
+.md-typeset h1::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--md-gradient-start), var(--md-gradient-mid));
+    filter: blur(var(--md-blur-radius));
+    opacity: var(--md-glow-intensity);
+    z-index: -1;
+    background-size: 200% auto;
+    animation: gradient 8s ease infinite;
+}
+
+.md-typeset h2 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--md-text-color);
+    margin-top: 1em;
+}
+
+.md-typeset h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--md-text-color);
+}
+
+h2.doc.doc-heading {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--md-text-color);
+}
+
+/* Tables */
+.md-typeset table:not([class]) {
+    background-color: var(--md-bg-color-light);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px var(--md-shadow-color);
+    overflow: hidden;
+    transition: transform var(--md-transition-medium) ease,
+                box-shadow var(--md-transition-medium) ease;
+}
+
+.md-typeset table:not([class]):hover {
+    box-shadow: 0 8px 30px var(--md-shadow-color);
+    transform: scale(1.01);
+}
+
+.md-typeset table:not([class]) th {
+    background-color: var(--md-table-header-bg);
+    color: var(--md-text-color-secondary);
+    font-weight: 600;
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--md-border-color);
+}
+
+.md-typeset table:not([class]) td {
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--md-border-color);
+    color: var(--md-text-color);
+}
+
+table tbody tr {
+    font-size: 16px;
+}
+
+/* Cards and Boxes */
+.md-typeset .admonition,
+.md-typeset details {
+    background-color: var(--md-bg-color-light);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px var(--md-shadow-color);
+    position: relative;
+    overflow: hidden;
+    border: none;
+    margin: 1.5em 0;
+    color: var(--md-text-color);
+    transition: transform var(--md-transition-medium) ease,
+                box-shadow var(--md-transition-medium) ease;
+}
+
+.md-typeset .admonition:hover,
+.md-typeset details:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px var(--md-shadow-color);
+}
+
+.md-typeset .admonition::before,
+.md-typeset details::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, var(--md-gradient-start), var(--md-gradient-mid), var(--md-gradient-end));
+    background-size: 200% auto;
+    animation: gradient 6s ease infinite;
+    z-index: 1;
+}
+
+.md-typeset .admonition-title,
+.md-typeset summary {
+    padding: 20px;
+    border-bottom: 1px solid var(--md-border-color);
+    background-color: transparent;
+    position: relative;
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--md-text-color);
+    margin: 0;
+}
+
+/* Code blocks */
+.md-typeset code, .md-typeset pre {
+    font-family: 'Fira Code', monospace;
+}
+
+.md-typeset pre {
+    position: relative;
+    border-radius: 10px;
+    margin: 2em 0;
+    box-shadow: 0 5px 30px rgba(0, 0, 0, 0.1);
+    transition: all var(--md-transition-medium) ease;
+}
+
+.md-typeset pre:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 60px rgba(0, 0, 0, 0.2);
+}
+
+.md-typeset pre > code {
+    background-color: var(--md-code-bg-color);
+    color: var(--md-code-fg-color);
+    padding: 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* Add code syntax highlighting animation */
+.md-typeset pre::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, var(--md-gradient-start), var(--md-gradient-mid), var(--md-gradient-end));
+    background-size: 200% auto;
+    border-radius: 10px 10px 0 0;
+    animation: gradient 6s ease infinite;
+    z-index: 1;
+}
+
+.md-typeset code:not(pre > code) {
+    background-color: var(--md-code-bg-color);
+    color: var(--md-code-fg-color);
+    border-radius: 4px;
+    padding: 0.2em 0.4em;
+}
+
+/* Navigation */
+.md-nav__item .md-nav__link--active {
+    color: var(--md-accent-fg-color);
+    font-weight: 600;
+}
+
+.md-nav__item .md-nav__link:hover {
+    color: var(--md-accent-fg-color);
+}
+
+/* Buttons and interactive elements */
+.md-typeset .md-button {
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-weight: 500;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    transition: color var(--md-transition-fast) ease,
+                transform var(--md-transition-medium) ease,
+                box-shadow var(--md-transition-medium) ease;
+}
+
+.md-typeset .md-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(120deg, var(--md-gradient-start), var(--md-gradient-mid));
+    background-size: 200% auto;
+    z-index: -1;
+    transition: transform var(--md-transition-medium) cubic-bezier(0.23, 1, 0.32, 1);
+    transform: translateY(100%);
+}
+
+.md-typeset .md-button:hover {
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 7px 14px rgba(0, 0, 0, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
+}
+
+.md-typeset .md-button:hover::before {
+    transform: translateY(0);
+}
+
+.md-typeset .md-button--primary {
+    background-color: var(--md-accent-fg-color);
+    box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* Search box */
+.md-search__form {
+    border-radius: 8px;
+    background-color: rgba(0, 0, 0, 0.1);
+    transition: all var(--md-transition-medium) ease;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.md-search__form:focus-within {
+    background-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2), 0 4px 12px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+}
+
+.md-search__input {
+    padding: 10px 15px;
+    font-size: 16px;
+    transition: all var(--md-transition-medium) ease;
+}
+
+.md-search__icon {
+    transition: color var(--md-transition-fast) ease;
+}
+
+.md-search__form:focus-within .md-search__icon {
+    color: var(--md-accent-fg-color);
+}
+
+/* Method badges (for API docs) */
+.method-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+    margin-right: 8px;
+    transition: all var(--md-transition-fast) ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.method-badge::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: rgba(255, 255, 255, 0.1);
+    transform: rotate(45deg);
+    z-index: 0;
+    transition: all var(--md-transition-medium) ease;
+    opacity: 0;
+}
+
+.method-badge:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.method-badge:hover::before {
+    animation: shine 1.5s infinite;
+}
+
+@keyframes shine {
+    0% {
+        left: -100%;
+        opacity: 0;
+    }
+    20% {
+        opacity: 0.2;
+    }
+    100% {
+        left: 100%;
+        opacity: 0;
+    }
+}
+
+.get-badge {
+    background-color: #10b981;
+}
+
+.post-badge {
+    background-color: #3b82f6;
+}
+
+.put-badge {
+    background-color: #f59e0b;
+}
+
+.delete-badge {
+    background-color: #ef4444;
+}
+
+/* For API-like content */
+.endpoint-card {
+    background-color: var(--md-bg-color-light);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px var(--md-shadow-color);
+    margin-bottom: 20px;
+    overflow: hidden;
+    transition: transform 0.2s ease-in-out;
+    color: var(--md-text-color);
+}
+
+.endpoint-card:hover {
+    transform: translateY(-5px);
+}
+
+/* Footer customization */
+.md-footer {
+    background-color: var(--md-primary-fg-color);
+}
+
+.md-footer-meta {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Custom badge styling */
+.badge {
+    display: inline-block;
+    background-color: #3b82f6;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 10px;
+    position: relative;
+    overflow: hidden;
+    transition: all var(--md-transition-fast) ease;
+    z-index: 1;
+}
+
+.badge::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%);
+    opacity: 0;
+    transform: scale(0.5);
+    transition: transform var(--md-transition-medium) ease-out, opacity var(--md-transition-medium) ease-out;
+}
+
+.badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.badge:hover::after {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Add pulse animation for new features or important items */
+.new-feature {
+    position: relative;
+}
+
+.new-feature::after {
+    content: '';
+    position: absolute;
+    right: -5px;
+    top: -5px;
+    width: 10px;
+    height: 10px;
+    background-color: #10b981;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}

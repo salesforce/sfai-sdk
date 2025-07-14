@@ -17,34 +17,50 @@ clean:
 	find . -name 'htmlcov' | xargs rm -rf
 	find . -name 'dist' | xargs rm -rf
 	find . -name 'build' | xargs rm -rf
+	find . -name 'site' | xargs rm -rf
 	find . -name '*.pyc' -delete 2>/dev/null || true
 	find . -name '*.pyo' -delete 2>/dev/null || true
 
 prerequisites:
-	python3 -m pip install -U pip setuptools wheel setuptools_scm[toml]
+	uv pip install -U pip setuptools wheel setuptools_scm[toml]
 
 install: prerequisites
-	python3 -m pip install -U --upgrade-strategy eager '.[all]'
+	uv pip install -U '.[all]'
 
 develop: prerequisites
-	python3 -m pip install -U --upgrade-strategy eager -e '.[dev]'
-	python3 -m pip install pre-commit
+	uv pip install -U -e '.[dev]'
+	uv pip install pre-commit
 	pre-commit install
+
+docs-install: prerequisites
+	uv pip install -U -e '.[docs]'
+
+docs-serve: docs-install
+	mkdocs serve --dev-addr 127.0.0.1:8000
+
+docs-build: docs-install
+	mkdocs build
+
+docs-deploy: docs-install
+	mkdocs gh-deploy
+
+docs-clean:
+	rm -rf site/
 
 
 lint:
 	pre-commit run --all-files --hook-stage manual
 
 package: prerequisites
-	python3 -m pip install setuptools>=40.8.0 wheel setuptools_scm[toml]>=6.0
-	python3 -m pip install -U --upgrade-strategy eager build
+	uv pip install setuptools>=40.8.0 wheel setuptools_scm[toml]>=6.0
+	uv pip install -U build
 	python3 -m build --no-isolation
 
 
 test: install
-	python3 -m pip install pytest coverage pytest-cov pytest-html pytest-xdist pytest-mock fastapi httpx uvicorn requests
+	uv pip install pytest coverage pytest-cov pytest-html pytest-xdist pytest-mock fastapi httpx uvicorn requests
 	pytest tests/ -v --tb=short --cov=sfai --cov-report=term-missing --cov-report=html --cov-report=xml --junitxml=pytest_report.xml
 
 tox:
-	python3 -m pip install tox
+	uv pip install tox
 	python3 -m tox
