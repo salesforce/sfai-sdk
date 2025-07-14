@@ -1,0 +1,55 @@
+minimum_pre_commit_version: 2.9.2
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+        stages: [pre-commit, pre-push, manual]
+      - id: end-of-file-fixer
+        stages: [pre-commit, pre-push, manual]
+      - id: check-added-large-files
+        stages: [pre-commit, pre-push, manual]
+
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        entry: mypy
+        language: system
+        pass_filenames: false
+        types: [python]
+        stages: [manual]
+
+      - id: black
+        name: black
+        entry: black
+        language: system
+        types: [python]
+
+      - id: ruff
+        name: ruff
+        description: Run ruff for extremely fast Python linting
+        entry: ruff check --force-exclude --fix
+        language: system
+        types_or: [python, pyi]
+        args: []
+        require_serial: true
+        additional_dependencies: []
+        minimum_pre_commit_version: 2.9.2
+        exclude: "templates"
+
+      - id: absolufy-imports
+        name: absolufy-imports
+        description: Automatically convert relative imports to absolute
+        entry: absolufy-imports
+        language: system
+        types: [python]
+        exclude: ^doc/
+
+      - id: nbstripout
+        name: nbstripout
+        description: strip output from Jupyter and IPython notebooks
+        entry: nbstripout
+        language: system
+        types: [jupyter]
+        exclude: ^doc/

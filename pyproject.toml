@@ -1,0 +1,182 @@
+[build-system]
+build-backend = 'setuptools.build_meta'
+requires = ['setuptools>=40.8.0', 'wheel', 'setuptools_scm[toml]>=6.0']
+
+[project]
+classifiers = [
+  'Development Status :: 4 - Beta',
+  'Operating System :: Unix',
+  'Programming Language :: Python',
+  'Programming Language :: Python :: 3',
+  'Programming Language :: Python :: 3.10',
+  'Programming Language :: Python :: 3.11',
+  'Programming Language :: Python :: 3.12'
+]
+description = 'A zero-config Python CLI to scaffold, containerize, and deploy FastAPI apps'
+dynamic = [
+  'version'
+]
+license = {file = 'LICENSE'}
+name = 'sfdc-det-sfai'
+readme = 'README.md'
+requires-python = '>=3.10'
+dependencies = [
+  'typer>=0.9.0',
+  'rich>=13.7.1',
+  'pydantic>=2.0.0',
+  'PyYAML>=6.0',
+  'click>=8.1.7',
+  'boto3>=1.24.0',
+  'kubernetes>=27.2.0',
+  'termcolor>=2.0.0',
+  'requests',
+]
+
+[project.scripts]
+sfai = "sfai.main:app"
+
+# Entry points for plugins
+[project.entry-points."sfai.platforms"]
+heroku = "sfai.platform.providers.heroku.platform:HerokuPlatform"
+local = "sfai.platform.providers.local.platform:LocalPlatform"
+minikube = "sfai.platform.providers.minikube.platform:MinikubePlatform"
+eks = "sfai.platform.providers.eks.platform:EKSPlatform"
+
+[project.entry-points."sfai.integrations"]
+mulesoft = "sfai.integrations.mulesoft.publish:MuleSoftIntegration"
+
+[project.optional-dependencies]
+dev = [
+  'build',
+  'pre-commit',
+  'pytest>=7.0.0',
+  'pytest-cov>=4.0.0',
+  'mypy',
+  'pytest-html',
+  'pytest-xdist',
+  'black',
+  'isort',
+  'ruff',
+  'absolufy-imports>=0.3.1',
+  'pytest-mock>=3.10.0',
+]
+
+[tool.black]
+exclude = '''
+(
+    asv_bench/env
+  | \.egg
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.nox
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | setup.py
+)
+'''
+line-length = 88
+target-version = ['py310']
+
+[tool.coverage.report]
+exclude_lines = [
+  # Have to re-enable the standard pragma
+  'pragma: no cover',
+  'def __repr__',
+  'if __name__ == .__main__.:',
+  'if TYPE_CHECKING:'
+]
+ignore_errors = false
+omit = ['sfai/_version.py']
+show_missing = true
+
+[tool.coverage.run]
+branch = true
+omit = ['sfai/_version.py']
+source = ['sfai']
+
+[tool.isort]
+combine_as_imports = true
+force_grid_wrap = 3
+force_sort_within_sections = true
+profile = 'black'
+line_length = 88
+
+[tool.mypy]
+ignore_missing_imports = true
+plugins = [
+  'pydantic.mypy'
+]
+
+[tool.ruff]
+fix = true
+line-length = 88
+target-version = 'py310'
+lint.ignore = [
+  # do not assign a lambda expression, use a def
+  'E731',
+  # controversial
+  'B006',
+  'B007',
+  'B008',
+  # setattr is used to side-step mypy
+  'B009',
+  # getattr is used to side-step mypy
+  'B010',
+  # false positives
+  'B019',
+  # Too many arguments to function call
+  'PLR0913',
+  # Too many returns
+  'PLR0911',
+  # Too many branches
+  'PLR0912',
+  # Too many statements
+  'PLR0915',
+  # Redefined loop name
+  'PLW2901',
+  # Magic number
+  'PLR2004'
+]
+lint.select = [
+  'F',
+  'E',
+  'W',
+  'YTT',
+  'B',
+  'Q',
+  'T10',
+  'INT',
+  'PLC',
+  'PLE',
+  'PLR',
+  'PLW',
+  'PIE',
+  'TID',
+  'ISC',
+  'TCH',
+  'C4',
+  'RUF',
+  'S102'
+]
+
+[tool.setuptools.packages.find]
+include = ['sfai', 'sfai.*']
+
+[tool.setuptools_scm]
+fallback_version = "0.1.0"
+tag_regex = "^v(?P<version>.*)$"
+version_scheme = "no-guess-dev"
+local_scheme = "no-local-version"
+write_to = "sfai/_version.py"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = "-v"

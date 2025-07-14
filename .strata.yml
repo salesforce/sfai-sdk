@@ -1,0 +1,20 @@
+global:
+  email-reply-to: jbillakanti@salesforce.com
+  email-only-last-committer-on-dev-branch: true
+  scheduled-build-compliance-required: false
+  num-artifacts-to-keep: 10
+  timeout: 120
+  production-branches:
+    - main
+
+stages:
+  precheck:
+    - work-item-and-reviewer:
+        required: false
+    - step:
+        name: python-package
+        image: docker.repo.local.sfdc.net/sfci/neteng-gno/python_images/python_testing_image
+        commands:
+          - make package
+  publish:
+    - python-publish
