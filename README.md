@@ -2,6 +2,9 @@
 
 A powerful toolkit for developing, connecting, and deploying AI applications within the Salesforce ecosystem. Build sophisticated FastAPI-powered AI services, deploy seamlessly to Heroku for native Salesforce integration, publish them to MuleSoft, and connect with Salesforce for enhanced agent capabilities. This SDK simplifies the entire AI application lifecycle—from local development to enterprise deployment on Heroku Private Spaces—with zero configuration, Kubernetes or container support, and secure connectivity between AI services and Salesforce.
 
+## Terms of the use
+Use of this project with Salesforce is subject to the [TERMS OF USE](https://github.com/salesforce/sfai-sdk/blob/main/TERMS%20OF%20USE)
+
 ## 🚀 Features
 
 - Scaffold a FastAPI app with Docker + Helm support
