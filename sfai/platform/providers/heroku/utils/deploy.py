@@ -87,7 +87,6 @@ def create_heroku_app(
                     else ("internal" if app_data.get("internal_routing") else "public")
                 ),
             }
-            ctx_mgr.update_platform(platform="heroku", values=heroku_config)
 
             return BaseResponse(
                 success=True,

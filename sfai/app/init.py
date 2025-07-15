@@ -47,7 +47,10 @@ def init(
         # Update environment and register app
         ctx_mgr = ContextManager()
         ctx_mgr.update_platform(
-            platform="local", app_name=app_name, values={"app_name": app_name}
+            platform="local",
+            environment="default",
+            app_name=app_name,
+            values={"app_name": app_name},
         )
         ctx_mgr.register_app(app_name, str(target_path))
 

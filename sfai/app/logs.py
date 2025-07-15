@@ -5,21 +5,41 @@ from typing import Optional
 from sfai.platform.switch import switch
 
 
-def logs(platform: Optional[str] = None) -> BaseResponse:
+def logs(platform: Optional[str] = None, environment: str = "default") -> BaseResponse:
     """
     Show logs for the current app.
+
+    Args:
+        platform: Platform to show logs for
+        environment: Environment to show logs for
+
+    Returns:
+        BaseResponse: Response object containing logs
     """
     try:
-        # switch platform if provided
-        if platform:
-            switch_result = switch(platform)
-            if not switch_result.success:
-                return switch_result
         ctx_mgr = ContextManager()
         context = ctx_mgr.read_context()
-
         if not context:
             return BaseResponse(success=False, error="No app context found.")
+
+        # Determine which platform and environment to use
+        if platform:
+            # User specified platform - switch to it with specified environment
+            switch_result = switch(platform, environment)
+            if not switch_result.success:
+                return switch_result
+            context = ctx_mgr.read_context(platform, environment)
+        else:
+            # No platform specified - use current platform with specified environment
+            current_platform = context.get("active_platform")
+            current_environment = context.get("environment")
+
+            # if user specified a different environment, switch to it
+            if current_environment != environment:
+                switch_result = switch(current_platform, environment)
+                if not switch_result.success:
+                    return switch_result
+            context = ctx_mgr.read_context(current_platform, environment)
 
         active_platform = context.get("active_platform")
         provider = PLATFORM_REGISTRY.get(active_platform)
@@ -32,7 +52,9 @@ def logs(platform: Optional[str] = None) -> BaseResponse:
         logs_response = provider.logs(context=context)
 
         return logs_response.with_update(
-            app_name=context.get("app_name"), platform=active_platform
+            app_name=context.get("app_name"),
+            platform=active_platform,
+            environment=environment,
         )
     except ValueError as e:
         return BaseResponse(success=False, error=f"Context validation error: {e!s}")

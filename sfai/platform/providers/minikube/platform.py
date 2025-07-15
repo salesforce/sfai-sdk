@@ -87,7 +87,6 @@ class MinikubePlatform(BasePlatform):
         minikube_config = {
             "namespace": namespace,
         }
-        ctx_mgr.update_platform(platform="minikube", values=minikube_config)
 
         return BaseResponse(
             success=True,
@@ -95,6 +94,7 @@ class MinikubePlatform(BasePlatform):
                 f"Minikube platform initialized successfully in namespace {namespace}"
             ),
             namespace=namespace,
+            data=minikube_config,
         )
 
     @with_context

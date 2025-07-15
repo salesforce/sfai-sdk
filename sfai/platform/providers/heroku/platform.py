@@ -38,13 +38,6 @@ class HerokuPlatform(BasePlatform):
         deployment_type = kwargs.get("deployment_type") or "buildpack"
         routing = kwargs.get("routing") or "public"
 
-        # Skip if app already created
-        if context.get("git_url"):
-            return BaseResponse(
-                success=False,
-                error=f"Platform already initialized with {context.get('app_name')}",
-            )
-
         auth_success, _ = check_heroku_auth_status()
         if not auth_success:
             login_success, msg = heroku_login()
@@ -90,10 +83,10 @@ class HerokuPlatform(BasePlatform):
                     ),
                 }
 
-                ctx_mgr.update_platform(platform="heroku", values=heroku_config)
                 return BaseResponse(
                     success=True,
                     message=f"Initialized with existing Heroku app {app_name}.",
+                    data=heroku_config,
                 )
         except subprocess.CalledProcessError:
             # Create new app when command fails

@@ -17,9 +17,7 @@ from sfai.constants import (
     WEB_EMOJI,
     LINK_EMOJI,
     TUNNEL_EMOJI,
-    LIGHT_BULB_EMOJI,
 )
-from sfai.platform.switch import switch
 
 app = typer.Typer()
 console = Console()
@@ -79,6 +77,7 @@ def start_cloudflare_tunnel(port: int, path: str) -> tuple[str, subprocess.Popen
 @app.callback(invoke_without_command=True, help="Open the current app in your browser")
 def open_cmd(
     platform: Optional[str] = typer.Option(None, help="Platform to open"),
+    environment: str = typer.Option("default", help="Environment to open"),
     path: str = typer.Option("/docs", help="API path to open"),
     port: int = typer.Option(8080, help="Local port"),
     tunnel: bool = typer.Option(False, help="Use Cloudflare tunnel"),
@@ -88,6 +87,10 @@ def open_cmd(
     Open the current app in your browser.
 
     Args:
+        platform: Optional[str]
+            Platform to open
+        environment: str
+            Environment to open (defaults to "default")
         path: str
             The path to open
             default: /docs
@@ -102,17 +105,15 @@ def open_cmd(
     Returns:
         dict[str, Any]
     """
-    if platform:
-        result = switch(platform)
-        if result.success:
-            console.print(f"{SUCCESS_EMOJI} Using {platform} platform")
-        else:
-            console.print(
-                f"{ERROR_EMOJI} Platform '{platform}' is not initialized yet."
-            )
-            console.print(f"{LIGHT_BULB_EMOJI} Run: sfai platform init {platform}")
-            return
-    result = open(path=path, port=port, tunnel=tunnel, url=url)
+
+    result = open(
+        platform=platform,
+        environment=environment,
+        path=path,
+        port=port,
+        tunnel=tunnel,
+        url=url,
+    )
 
     if not result.success:
         console.print(f"{ERROR_EMOJI} [red]{result.error}[/]")

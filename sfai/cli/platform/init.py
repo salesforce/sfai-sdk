@@ -16,9 +16,10 @@ ctx_mgr = ContextManager()
     help="Initialize or update cloud/local environment in context",
 )
 def init_platform_cmd(
-    cloud: Optional[str] = typer.Option(
-        None, help="Environment type (local, eks, gcp, heroku)"
+    platform: Optional[str] = typer.Option(
+        None, help="Platform type (local, eks, gcp, heroku)"
     ),
+    environment: str = typer.Option("default", help="Environment name"),
     # heroku options
     app_name: Optional[str] = typer.Option(None, help="Heroku app name (for heroku)"),
     team_name: Optional[str] = typer.Option(None, help="Heroku team name (for heroku)"),
@@ -47,8 +48,10 @@ def init_platform_cmd(
     Initialize or update cloud/local environment in context
 
     Args:
-        cloud: str
-            Environment type (local, eks, gcp, heroku)
+        platform: str
+            Platform type (local, eks, gcp, heroku)
+        environment: str
+            Environment name (defaults to "default")
         app_name: Optional[str]
             Heroku app name (for heroku)
         team_name: Optional[str]
@@ -81,14 +84,18 @@ def init_platform_cmd(
 
     current_env = context.get("active_env", {})
 
-    if not cloud:
-        cloud = Prompt.ask(
-            "Enter the environment type",
-            choices=["local", "eks", "gcp", "heroku", "minikube"],
+    if not platform:
+        platform = Prompt.ask(
+            "Enter the platform type",
+            choices=["eks", "heroku", "minikube"],
             default=current_env or "local",
         )
+    environment = Prompt.ask(
+        "Enter the environment",
+        default=environment or context.get("environment", "default"),
+    )
 
-    if cloud == "heroku":
+    if platform == "heroku":
         if interactive:
             app_name = Prompt.ask(
                 "Enter the app name",
@@ -124,7 +131,7 @@ def init_platform_cmd(
             routing = routing or context.get("routing", "public")
             if not skip_confirm:
                 console.print(
-                    f"Initializing [cyan]{cloud}[/] environment with the "
+                    f"Initializing [cyan]{platform}[/] environment with the "
                     f"following values:"
                 )
                 console.print(f"  App Name: [cyan]{app_name}[/]")
@@ -143,7 +150,7 @@ def init_platform_cmd(
                     )
                     return
 
-    if cloud == "eks":
+    if platform == "eks":
         if interactive:
             cluster_name = Prompt.ask(
                 "Enter the EKS cluster name",
@@ -172,7 +179,7 @@ def init_platform_cmd(
             ecr_repo = ecr_repo or context.get("ecr_repo", f"{app_name}")
             if not skip_confirm:
                 console.print(
-                    f"Initializing [cyan]{cloud}[/] environment with the "
+                    f"Initializing [cyan]{platform}[/] environment with the "
                     f"following values:"
                 )
                 console.print(f"  Cluster Name: [cyan]{cluster_name}[/]")
@@ -192,7 +199,8 @@ def init_platform_cmd(
                     return
 
     result = init(
-        cloud=cloud,
+        platform=platform,
+        environment=environment,
         # heroku options
         app_name=app_name,
         team_name=team_name,
@@ -211,16 +219,19 @@ def init_platform_cmd(
     )
 
     if result.success:
-        app_name = context.get("app_name")
+        # Get the environment-specific app name from result data if available
+        environment_app_name = result.data.get("app_name") if result.data else None
+        app_name = environment_app_name or context.get("app_name")
         console.print(
-            f"{SUCCESS_EMOJI} {cloud} environment initialized → app_name: {app_name}"
+            f"{SUCCESS_EMOJI} {platform} environment initialized → app_name: {app_name}"
         )
         if team_name:
             console.print(f"🔗 Team: {team_name}")
         if private_space:
             console.print(f"🔗 Private Space: {private_space}")
         console.print(
-            f"{ROCKET_EMOJI} Next: Run `sfai app deploy` to deploy your app to {cloud}."
+            f"{ROCKET_EMOJI} Next: Run `sfai app deploy` to deploy your app to "
+            f"{platform}."
         )
     else:
         console.print(f"{ERROR_EMOJI} {result.error}")

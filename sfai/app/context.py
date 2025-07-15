@@ -18,6 +18,7 @@ def get_context() -> BaseResponse:
             success=True,
             app_name=context.get("app_name"),
             platform=context.get("active_platform"),
+            environment=context.get("active_environment"),
             context=context,
         )
     except ValueError as e:

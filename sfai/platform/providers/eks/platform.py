@@ -162,9 +162,6 @@ class EKSPlatform(BasePlatform):
         if service_account:
             aws_config["service_account"] = service_account
 
-        # Update context with AWS configuration
-        ctx_mgr.update_platform(platform="eks", values=aws_config)
-
         return BaseResponse(
             success=True,
             message=(
@@ -174,6 +171,7 @@ class EKSPlatform(BasePlatform):
             cluster_name=cluster_name,
             namespace=namespace,
             region=region,
+            data=aws_config,
         )
 
     @with_context

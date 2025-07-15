@@ -69,7 +69,9 @@ class ContextManager:
             else:
                 target[key] = value
 
-    def read_context(self, platform: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    def read_context(
+        self, platform: Optional[str] = None, environment: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
         """
         Read application context from the context file.
 
@@ -77,6 +79,9 @@ class ContextManager:
             platform: Optional[str]
                 Platform name to read, uses active platform if None.
                 Use this to get platform-specific data.
+            environment: Optional[str]
+                Environment name to read, uses active environment if None.
+                Use this to get environment-specific data.
 
         Returns:
             Optional[Dict[str, Any]]
@@ -92,16 +97,23 @@ class ContextManager:
 
             # get platform data from context
             platform = platform or context.active_platform
+            environment = environment or context.active_environment
             if platform not in context.platform:
                 return None
-            platform_data = context.platform.get(platform, {})
-            if isinstance(platform_data, PlatformContext):
-                platform_data = platform_data.dict()
+            platform_environments = context.platform.get(platform, {})
+            if environment not in platform_environments:
+                return None
+
+            # Get the environment-specific data
+            environment_data = platform_environments.get(environment, {})
+            if isinstance(environment_data, PlatformContext):
+                environment_data = environment_data.dict()
 
             result = {
                 "app_name": context.app_name,
                 "active_platform": platform,
-                **platform_data,
+                "active_environment": environment,
+                **environment_data,
             }
 
             if context.integrations:
@@ -112,7 +124,11 @@ class ContextManager:
             raise ValueError(f"{ERROR_EMOJI} Invalid context data: {e}") from e
 
     def update_platform(
-        self, platform: str, values: Dict[str, Any], app_name: Optional[str] = None
+        self,
+        platform: str,
+        values: Dict[str, Any],
+        environment: str = "default",
+        app_name: Optional[str] = None,
     ) -> None:
         """
         Update platform values in the context.
@@ -122,6 +138,8 @@ class ContextManager:
                 Platform name to update
             values: Dict[str, Any]
                 Values to set for the platform
+            environment: str
+                Environment name to update
             app_name: Optional[str]
                 App name to update
 
@@ -140,9 +158,12 @@ class ContextManager:
                 data["platform"] = {}
             if platform not in data["platform"]:
                 data["platform"][platform] = {}
+            if environment not in data["platform"][platform]:
+                data["platform"][platform][environment] = {}
 
-            self._deep_merge(data["platform"][platform], values)
+            self._deep_merge(data["platform"][platform][environment], values)
             data["active_platform"] = platform
+            data["active_environment"] = environment
 
             context = ApplicationContext(**data)
 
@@ -151,7 +172,9 @@ class ContextManager:
         except ValidationError as e:
             raise ValueError(f"{ERROR_EMOJI} Invalid context data: {e}") from e
 
-    def clear_platform_keys(self, platform: str, keys: List[str]) -> None:
+    def clear_platform_keys(
+        self, platform: str, environment: str = "default", keys: List[str] = []
+    ) -> None:
         """
         Clear specific keys from the given platform block in the context.
 
@@ -160,14 +183,20 @@ class ContextManager:
                 The platform name (e.g., "heroku")
             keys: List[str]
                 Keys to remove from that platform block
+            environment: str
+                Environment name to clear
         """
         try:
             data = self._load_json(self.context_file)
-            if "platform" not in data or platform not in data["platform"]:
+            if (
+                "platform" not in data
+                or platform not in data["platform"]
+                or environment not in data["platform"][platform]
+            ):
                 return
 
             for key in keys:
-                data["platform"][platform].pop(key, None)
+                data["platform"][platform][environment].pop(key, None)
 
             context = ApplicationContext(**data)
             self._save_json(self.context_file, context.dict())
@@ -348,3 +377,74 @@ class ContextManager:
             self._save_json(self.global_context_file, global_context.dict())
         except ValidationError as e:
             raise ValueError(f"{ERROR_EMOJI} Invalid global context data: {e}") from e
+
+    def check_platform_environment(
+        self, platform: str, environment: str
+    ) -> Dict[str, Any]:
+        """
+        Check if a platform environment combination exists and provide detailed status.
+
+        Args:
+            platform: str
+                Platform name to check
+            environment: str
+                Environment name to check
+
+        Returns:
+            Dict[str, Any]
+                Status information including exists, available_environments, etc.
+        """
+        try:
+            data = self._load_json(self.context_file)
+            if not data:
+                return {
+                    "exists": False,
+                    "platform_exists": False,
+                    "available_environments": [],
+                    "error": "No app context found",
+                }
+
+            context = ApplicationContext(**data)
+
+            # Check if platform exists
+            if platform not in context.platform:
+                return {
+                    "exists": False,
+                    "platform_exists": False,
+                    "available_platforms": list(context.platform.keys()),
+                    "available_environments": [],
+                    "error": f"Platform '{platform}' not initialized",
+                }
+
+            # Platform exists, check environment
+            platform_environments = context.platform.get(platform, {})
+            available_envs = (
+                list(platform_environments.keys())
+                if isinstance(platform_environments, dict)
+                else []
+            )
+
+            if environment not in platform_environments:
+                return {
+                    "exists": False,
+                    "platform_exists": True,
+                    "available_environments": available_envs,
+                    "error": (
+                        f"Environment '{environment}' not found for platform "
+                        f"'{platform}'"
+                    ),
+                }
+
+            return {
+                "exists": True,
+                "platform_exists": True,
+                "available_environments": available_envs,
+                "error": None,
+            }
+        except (ValidationError, KeyError) as e:
+            return {
+                "exists": False,
+                "platform_exists": False,
+                "available_environments": [],
+                "error": f"Context validation error: {e}",
+            }
