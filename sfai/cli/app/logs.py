@@ -12,7 +12,9 @@ app = typer.Typer(help="Show logs for the current app")
 @app.callback(invoke_without_command=True, help="Show logs for the current app")
 def logs_cmd(
     platform: Optional[str] = typer.Option(None, help="Platform to show logs from"),
-    environment: str = typer.Option("default", help="Environment to show logs from"),
+    environment: Optional[str] = typer.Option(
+        None, help="Environment to show logs from"
+    ),
 ) -> None:
     """
     Show logs for the current app.

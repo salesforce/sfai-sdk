@@ -2,45 +2,40 @@ from typing import Optional
 from sfai.platform.registry import PLATFORM_REGISTRY
 from sfai.context.manager import ContextManager
 from sfai.core.response_models import BaseResponse
-from sfai.platform.switch import switch
+from sfai.app.utils.helpers import determine_platform_and_environment
 
 
 def delete(
-    platform: Optional[str] = None, environment: str = "default"
+    platform: Optional[str] = None, environment: Optional[str] = None
 ) -> BaseResponse:
     """
     Delete the current app from the context.
 
     Args:
         platform: Platform to delete from (optional)
-        environment: Environment to delete from (defaults to "default")
+        environment: Environment to delete from (uses active environment if None)
     """
     try:
         ctx_mgr = ContextManager()
-        context = ctx_mgr.read_context()
+
+        # determine the platform and environment to use
+        response = determine_platform_and_environment(platform, environment)
+        if not response.success:
+            return response
+
+        active_platform = response.platform
+        active_environment = response.environment
+
+        # Read the updated context for the determined platform and environment
+        context = ctx_mgr.read_context(active_platform, active_environment)
         if not context:
-            return BaseResponse(success=False, error="No app context found.")
-
-        # Determine which platform and environment to use
-        if platform:
-            # User specified platform - switch to it with specified environment
-            switch_result = switch(platform, environment)
-            if not switch_result.success:
-                return switch_result
-            context = ctx_mgr.read_context(platform, environment)
-        else:
-            # No platform specified - use current platform with specified environment
-            current_platform = context.get("active_platform")
-            current_environment = context.get("environment")
-
-            # if user specified a different environment, switch to it
-            if current_environment != environment:
-                switch_result = switch(current_platform, environment)
-                if not switch_result.success:
-                    return switch_result
-            context = ctx_mgr.read_context(current_platform, environment)
-
-        active_platform = context.get("active_platform")
+            return BaseResponse(
+                success=False,
+                error=(
+                    f"Failed to read context for platform '{active_platform}' "
+                    f"and environment '{active_environment}'"
+                ),
+            )
         provider = PLATFORM_REGISTRY.get(active_platform)
 
         if not provider:
@@ -52,7 +47,7 @@ def delete(
         return delete_response.with_update(
             app_name=context.get("app_name"),
             platform=active_platform,
-            environment=environment,
+            environment=active_environment,
         )
     except ValueError as e:
         return BaseResponse(success=False, error=f"Context validation error: {e!s}")

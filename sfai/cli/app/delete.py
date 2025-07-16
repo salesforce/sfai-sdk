@@ -11,7 +11,7 @@ console = Console()
 @app.callback(invoke_without_command=True, help="Delete the current app")
 def delete_cmd(
     platform: Optional[str] = typer.Option(None, help="Platform to delete from"),
-    environment: str = typer.Option("default", help="Environment to delete from"),
+    environment: Optional[str] = typer.Option(None, help="Environment to delete from"),
 ):
     """
     Delete the current app deployment

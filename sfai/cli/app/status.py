@@ -11,7 +11,9 @@ console = Console()
 @app.callback(invoke_without_command=True, help="Show status of the current app")
 def status_cmd(
     platform: Optional[str] = typer.Option(None, help="Platform to show status from"),
-    environment: str = typer.Option("default", help="Environment to show status from"),
+    environment: Optional[str] = typer.Option(
+        None, help="Environment to show status from"
+    ),
 ) -> None:
     """
     Show the status of the current app from context.

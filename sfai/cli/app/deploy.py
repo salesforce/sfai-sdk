@@ -21,7 +21,7 @@ app = typer.Typer(help="Deploy an application to the configured environment.")
 def deploy_cmd(
     # common options
     platform: Optional[str] = typer.Option(None, help="Platform to deploy to"),
-    environment: str = typer.Option("default", help="Environment to deploy to"),
+    environment: Optional[str] = typer.Option(None, help="Environment to deploy to"),
     path: str = typer.Option(
         ".", help="Path to the app folder (default: current directory)"
     ),
