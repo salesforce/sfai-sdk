@@ -39,59 +39,29 @@ def init(
     if not provider:
         return BaseResponse(success=False, error=f"Unsupported provider: {platform}")
 
-    # Handle app_name logic
-    base_app_name = context.get("app_name")
-    user_provided_app_name = kwargs.get("app_name")
-
-    # Always append environment suffix for non-default environments
-    if environment != "default":
-        # Use user provided name if available, otherwise use base app name
-        app_name_base = user_provided_app_name or base_app_name
-        environment_app_name = f"{app_name_base}-{environment}"
-    else:
-        # For default environment, use base app name or user provided name
-        environment_app_name = user_provided_app_name or base_app_name
-
-    # Create a clean context with only basic app info and environment-specific app name
-    # This ensures providers start fresh for new environments
-    environment_context = {
-        "app_name": environment_app_name,
-        "active_platform": platform,
-        "active_environment": environment,
-    }
-
-    # Check if this environment already exists and add existing data if it does
-    existing_env_context = ctx_mgr.read_context(platform, environment)
-    if existing_env_context:
-        # Merge existing environment-specific data but preserve our calculated app_name
-        environment_context.update(existing_env_context)
-        environment_context["app_name"] = (
-            environment_app_name  # Always use our calculated app name
-        )
-
-    # Remove app_name from kwargs to prevent it from overriding our
-    # environment-specific logic
-    provider_kwargs = kwargs.copy()
-    provider_kwargs.pop("app_name", None)
-
     try:
-        result = provider.init(context=environment_context, **provider_kwargs)
+        result = provider.init(context=context, environment=environment, **kwargs)
         if not isinstance(result, BaseResponse):
             return BaseResponse(
                 success=False, error="Invalid result from provider handler"
             )
 
-        # Update platform with environment-specific configuration
-        if result.success and hasattr(result, "data") and result.data:
+        if not result.success:
+            return result
+
+        # Save the platform configuration to context
+        if result.data:
             ctx_mgr.update_platform(platform, result.data, environment)
 
-            # Switch to the newly initialized environment
-            switch(platform, environment)
+        # Switch to the newly initialized environment
+        switch_result = switch(platform, environment)
+        if not switch_result.success:
+            return switch_result
 
         return result.with_update(
             platform=platform,
             environment=environment,
-            app_name=base_app_name,  # Return the original app name in response
+            app_name=context.get("app_name"),
         )
     except Exception as e:
         return BaseResponse(success=False, error=str(e))

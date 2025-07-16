@@ -77,7 +77,7 @@ def start_cloudflare_tunnel(port: int, path: str) -> tuple[str, subprocess.Popen
 @app.callback(invoke_without_command=True, help="Open the current app in your browser")
 def open_cmd(
     platform: Optional[str] = typer.Option(None, help="Platform to open"),
-    environment: str = typer.Option("default", help="Environment to open"),
+    environment: Optional[str] = typer.Option(None, help="Environment to open"),
     path: str = typer.Option("/docs", help="API path to open"),
     port: int = typer.Option(8080, help="Local port"),
     tunnel: bool = typer.Option(False, help="Use Cloudflare tunnel"),

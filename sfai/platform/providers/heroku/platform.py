@@ -28,11 +28,14 @@ class HerokuPlatform(BasePlatform):
         if not is_heroku_cli_installed():
             return BaseResponse(success=False, error="Heroku CLI not installed.")
 
-        app_name = (
-            kwargs.get("app_name").lower()
-            if kwargs.get("app_name")
-            else context.get("app_name", "").lower()
+        app_name = context.get("app_name", "")
+        environment = (
+            kwargs.get("environment") or context.get("environment") or "default"
         )
+        if environment != "default":
+            heroku_app_name = f"{app_name}-{environment}"
+        else:
+            heroku_app_name = app_name
         team_name = kwargs.get("team_name") or context.get("team_name", "")
         private_space = kwargs.get("private_space") or context.get("private_space", "")
         deployment_type = kwargs.get("deployment_type") or "buildpack"
@@ -46,7 +49,7 @@ class HerokuPlatform(BasePlatform):
 
         try:
             result = subprocess.run(
-                ["heroku", "apps:info", "--app", app_name, "--json"],
+                ["heroku", "apps:info", "--app", heroku_app_name, "--json"],
                 check=True,
                 capture_output=True,
                 text=True,
@@ -58,15 +61,17 @@ class HerokuPlatform(BasePlatform):
                 )
                 # Create new app when access is forbidden
                 return create_heroku_app(
-                    app_name, team_name, private_space, routing, deployment_type
+                    heroku_app_name, team_name, private_space, routing, deployment_type
                 )
             else:
                 # App exists and have access
                 app_info = json.loads(COLOR_PATTERN.sub("", result.stdout))
-                logger.warning(f"App already exists, using existing app {app_name}")
+                logger.warning(
+                    f"App already exists, using existing app {heroku_app_name}"
+                )
 
                 heroku_config = {
-                    "app_name": app_info["app"]["name"],
+                    "heroku_app_name": heroku_app_name,
                     "public_url": app_info["app"]["web_url"],
                     "git_url": app_info["app"]["git_url"],
                     "team_name": app_info["app"]["team"],
@@ -85,13 +90,13 @@ class HerokuPlatform(BasePlatform):
 
                 return BaseResponse(
                     success=True,
-                    message=f"Initialized with existing Heroku app {app_name}.",
+                    message=f"Initialized with existing Heroku app {heroku_app_name}.",
                     data=heroku_config,
                 )
         except subprocess.CalledProcessError:
             # Create new app when command fails
             return create_heroku_app(
-                app_name, team_name, private_space, routing, deployment_type
+                heroku_app_name, team_name, private_space, routing, deployment_type
             )
 
     @with_context
@@ -110,13 +115,15 @@ class HerokuPlatform(BasePlatform):
                 "heroku",
                 "apps:destroy",
                 "--app",
-                context.get("app_name"),
+                context.get("heroku_app_name"),
                 "--confirm",
-                context.get("app_name"),
+                context.get("heroku_app_name"),
             ],
             check=False,
         )
-        ctx_mgr.clear_platform_keys("heroku", ["app_name", "public_url", "git_url"])
+        ctx_mgr.clear_platform_keys(
+            "heroku", ["heroku_app_name", "public_url", "git_url"]
+        )
         return BaseResponse(
             success=True,
             message="App deleted successfully",
@@ -124,13 +131,15 @@ class HerokuPlatform(BasePlatform):
 
     @with_context
     def status(self, context: Dict[str, Any]) -> BaseResponse:
-        subprocess.run(["heroku", "ps", "--app", context.get("app_name")], check=False)
+        subprocess.run(
+            ["heroku", "ps", "--app", context.get("heroku_app_name")], check=False
+        )
         return BaseResponse(success=True, message="App status checked successfully")
 
     @with_context
     def logs(self, context: Dict[str, Any]) -> BaseResponse:
         subprocess.run(
-            ["heroku", "logs", "--app", context.get("app_name")], check=False
+            ["heroku", "logs", "--app", context.get("heroku_app_name")], check=False
         )
         return BaseResponse(success=True, message="Logs fetched successfully")
 

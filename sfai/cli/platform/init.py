@@ -88,7 +88,7 @@ def init_platform_cmd(
         platform = Prompt.ask(
             "Enter the platform type",
             choices=["eks", "heroku", "minikube"],
-            default=current_env or "local",
+            default=current_env or "heroku",
         )
     environment = Prompt.ask(
         "Enter the environment",
@@ -97,10 +97,6 @@ def init_platform_cmd(
 
     if platform == "heroku":
         if interactive:
-            app_name = Prompt.ask(
-                "Enter the app name",
-                default=app_name or context.get("app_name", "").lower(),
-            )
             team_name = Prompt.ask(
                 "Enter the team name", default=team_name or context.get("team_name", "")
             )
