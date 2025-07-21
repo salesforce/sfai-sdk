@@ -10,8 +10,6 @@ Welcome to the SFAI SDK! The **complete toolkit** for taking your AI application
 
     ✨ **Zero complexity. Maximum impact.**
 
----
-
 !!! warning "🚧 ACTIVE DEVELOPMENT NOTICE"
 
     **SFAI SDK is currently in active development.** Features and APIs may change as we continue to enhance the platform.
@@ -22,22 +20,22 @@ Welcome to the SFAI SDK! The **complete toolkit** for taking your AI application
 
 ## 🚀 Key Features
 
-=== "🐳 Local Development"
+### 🐳 Local Development
 
-    **Zero-config Docker deployment for instant testing**
+**Zero-config Docker deployment for instant testing**
 
-    ```bash
-    sfai app init     # 📦 Scaffold your app
-    sfai app deploy   # 🚀 Deploy locally
-    sfai app open     # 🌐 Open in browser
-    ```
+```bash
+sfai app init     # 📦 Scaffold your app
+sfai app deploy   # 🚀 Deploy locally
+sfai app open     # 🌐 Open in browser
+```
 
-    ✨ **What you get:**
+✨ **What you get:**
 
-    - **Zero-config local deployment**: Simple Docker containerization for instant testing
-    - **Automatic port management**: Finds available ports and handles networking
-    - **Hot reloading**: Test changes immediately without complex setup
-    - **Consistent environments**: Same container runs locally and in production-ready platforms
+- **Zero-config local deployment**: Simple Docker containerization for instant testing
+- **Automatic port management**: Finds available ports and handles networking
+- **Hot reloading**: Test changes immediately without complex setup
+- **Consistent environments**: Same container runs locally and in production-ready platforms
 
 === "🏭 Production-Ready Platforms"
 

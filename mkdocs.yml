@@ -22,7 +22,6 @@ theme:
     - content.code.copy
     - content.code.select
     - content.code.annotate
-    - content.tabs.link
     - content.tooltips
     - content.action.edit
     - content.action.view
@@ -61,11 +60,6 @@ extra_css:
   - stylesheets/extra.css
   - https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap
   - https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap
-
-extra_javascript:
-  - javascripts/extra.js
-  - https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js
-  - javascripts/tablesort.js
 
 extra:
   version:
@@ -191,10 +185,6 @@ markdown_extensions:
           format: !!python/name:pymdownx.arithmatex.fence_mathjax_format
   - pymdownx.tabbed:
       alternate_style: true
-      combine_header_slug: true
-      slugify: !!python/object/apply:pymdownx.slugs.slugify
-        kwds:
-          case: lower
   - pymdownx.tasklist:
       custom_checkbox: true
       clickable_checkbox: true
