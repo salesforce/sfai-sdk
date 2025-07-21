@@ -24,23 +24,19 @@ jobs:
         python-version: '3.x'
 
     - name: Install dependencies
-      run: pip install --upgrade build setuptools wheel setuptools_scm
+      run: pip install --upgrade build setuptools wheel setuptools_scm twine
 
     - name: Clean build artifacts
       run: rm -rf dist/ build/ *.egg-info
 
-    - name: Get version from git tag
-      run: |
-        VERSION=$(git describe --tags --exact-match HEAD | sed 's/^v//')
-        echo "SETUPTOOLS_SCM_PRETEND_VERSION=$VERSION" >> $GITHUB_ENV
-        echo "Building version: $VERSION"
-
     - name: Build package
-      run: python -m build --no-isolation
-      env:
-        SETUPTOOLS_SCM_PRETEND_VERSION: ${{ env.SETUPTOOLS_SCM_PRETEND_VERSION }}
+      run: python -m build
 
-    - name: Publish to PyPI
-      uses: pypa/gh-action-pypi-publish@v1.8.6
-      with:
-        password: ${{ secrets.PYPI_TOKEN }}
+    - name: Check package
+      run: twine check dist/*
+
+    - name: Upload to PyPI
+      run: twine upload dist/*
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
