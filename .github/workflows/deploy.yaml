@@ -23,7 +23,7 @@ jobs:
         python-version: '3.x'
 
     - name: Install dependencies
-      run: pip install --upgrade setuptools wheel pytest flake8 black mypy ruff setuptools_scm
+      run: pip install --upgrade build setuptools wheel pytest flake8 black mypy ruff setuptools_scm
 
     - name: Build wheel
       run: python -m build
