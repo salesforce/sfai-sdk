@@ -26,7 +26,7 @@ jobs:
       run: pip install --upgrade setuptools wheel pytest flake8 black mypy ruff setuptools_scm
 
     - name: Build wheel
-      run: python setup.py sdist bdist_wheel
+      run: python -m build
 
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@v1.8.6
