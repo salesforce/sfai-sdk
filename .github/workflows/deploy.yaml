@@ -5,6 +5,7 @@ on:
     types: [published]
     tags:
       - 'v*.*.*'
+      - 'v*.*.*-*'
 
 jobs:
   build-and-deploy:
