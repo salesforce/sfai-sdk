@@ -29,11 +29,16 @@ jobs:
     - name: Clean build artifacts
       run: rm -rf dist/ build/ *.egg-info
 
-    - name: Build package (wheel only)
-      run: python -m build --wheel
+    - name: Get version from git tag
+      run: |
+        VERSION=$(git describe --tags --exact-match HEAD | sed 's/^v//')
+        echo "SETUPTOOLS_SCM_PRETEND_VERSION=$VERSION" >> $GITHUB_ENV
+        echo "Building version: $VERSION"
 
-    - name: Build source distribution
-      run: python -m build --sdist --no-isolation
+    - name: Build package
+      run: python -m build --no-isolation
+      env:
+        SETUPTOOLS_SCM_PRETEND_VERSION: ${{ env.SETUPTOOLS_SCM_PRETEND_VERSION }}
 
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@v1.8.6
