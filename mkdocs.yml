@@ -1,7 +1,7 @@
 site_name: SFAI SDK
 site_description: A modern and powerful SDK for SFAI
-repo_url: https://github.com/da-mle-playground-emu/sfai-sdk
-repo_name: da-mle-playground-emu/sfai-sdk
+repo_url: https://github.com/salesforce/sfai-sdk
+repo_name: salesforce/sfai-sdk
 edit_uri: edit/main/docs/
 
 theme:
@@ -73,7 +73,7 @@ extra:
     default: stable
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/da-mle-playground-emu/sfai-sdk
+      link: https://github.com/salesforce/sfai-sdk
       name: GitHub Repository
     - icon: fontawesome/solid/paper-plane
       link: mailto:support@sfai.com
@@ -175,7 +175,7 @@ markdown_extensions:
   - pymdownx.keys
   - pymdownx.magiclink:
       repo_url_shorthand: true
-      user: da-mle-playground-emu
+      user: salesforce
       repo: sfai-sdk
   - pymdownx.smartsymbols
   - pymdownx.snippets:
