@@ -10,16 +10,10 @@
 
 ## Install SFAI SDK
 
-!!! warning "Note"
-
-    The package is not yet available on an internal index. Please clone the repository and install it in editable mode
-
 ```bash
-git clone https://github.com/da-mle-playground-emu/sfai-sdk/tree/pythonapis-refactoring
-cd sfai-sdk
-pip install -e .
+pip install sfai-sdk
 ```
 
 ---
 
-For more details, see the [main README](https://github.com/da-mle-playground-emu/sfai-sdk/blob/main/README.md).
+For more details, see the [main README](https://github.com/salesforce/sfai-sdk/blob/main/README.md).

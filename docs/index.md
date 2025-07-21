@@ -16,7 +16,7 @@ Welcome to the SFAI SDK! The **complete toolkit** for taking your AI application
 
     **SFAI SDK is currently in active development.** Features and APIs may change as we continue to enhance the platform.
 
-    If you encounter any issues, please [open a GitHub issue](https://github.com/da-mle-playground-emu/sfai-sdk/issues) or submit a pull request. Feedback and contributions are very welcome!
+    If you encounter any issues, please [open a GitHub issue](https://github.com/salesforce/sfai-sdk/issues) or submit a pull request. Feedback and contributions are very welcome!
 
 ---
 

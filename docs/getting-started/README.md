@@ -22,6 +22,6 @@
 
     **Your next step:** Head to the [Installation](installation.md) guide to set up SFAI SDK on your system.
 
-    **Questions?** Check our [FAQ](../faq.md) or [open an issue](https://github.com/da-mle-playground-emu/sfai-sdk/issues) on GitHub.
+    **Questions?** Check our [FAQ](../faq.md) or [open an issue](https://github.com/salesforce/sfai-sdk/issues) on GitHub.
 
 ---

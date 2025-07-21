@@ -27,7 +27,7 @@ SFAI SDK is designed to work natively with the Salesforce ecosystem:
 ## Installation
 
 ```bash
-pip install sfai
+pip install sfai-sdk
 ```
 
 ### Prerequisites
@@ -39,7 +39,7 @@ pip install sfai
 - For AWS deployments: AWS CLI configured with appropriate permissions
 - For Heroku deployments: Heroku CLI installed
 
-For detailed documentation, see the [SFAI-DOCS](https://git.soma.salesforce.com/pages/da-mle/forge-docs/sfai-sdk/).
+For detailed documentation, see the [SFAI-DOCS](https://opensource.salesforce.com/sfai-sdk/).
 
 ## Contributing
 
