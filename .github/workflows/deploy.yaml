@@ -29,8 +29,11 @@ jobs:
     - name: Clean build artifacts
       run: rm -rf dist/ build/ *.egg-info
 
-    - name: Build package
-      run: python -m build
+    - name: Build package (wheel only)
+      run: python -m build --wheel
+
+    - name: Build source distribution
+      run: python -m build --sdist --no-isolation
 
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@v1.8.6
