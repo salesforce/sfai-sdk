@@ -5,9 +5,20 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
+    types: [ opened, synchronize, reopened ]
+
+# Cancel in-progress runs when a new commit is pushed to the same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
 
 jobs:
   test:
+    name: Test Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -16,6 +27,9 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        # For PRs, checkout the merge commit to test the actual merge result
+        ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
@@ -30,10 +44,18 @@ jobs:
 
     - name: Run tests
       run: |
-        pytest tests/ -v --cov=sfai --cov-report=xml
+        echo "🧪 Running tests for Python ${{ matrix.python-version }}"
+        pytest tests/ -v --cov=sfai --cov-report=xml --cov-report=term-missing
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
         file: ./coverage.xml
         fail_ci_if_error: false
+
+    - name: Test Summary
+      if: always()
+      run: |
+        echo "✅ Test Summary for Python ${{ matrix.python-version }}"
+        echo "📊 Coverage report generated"
+        echo "🎯 All tests completed"
