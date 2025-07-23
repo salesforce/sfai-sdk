@@ -3,6 +3,7 @@ import subprocess
 from pathlib import Path
 from typing import Union, Any, Optional
 import re
+import platform
 from sfai.context.manager import ContextManager
 from datetime import datetime
 from rich.console import Console
@@ -13,6 +14,7 @@ from sfai.platform.providers.heroku.utils.checks import (
     get_default_branch,
 )
 from sfai.core.response_models import BaseResponse
+import os
 
 console = Console()
 ctx_mgr = ContextManager()
@@ -20,8 +22,42 @@ ctx_mgr = ContextManager()
 COLOR_PATTERN = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 
 
+def _push_with_buildx(app_name: str, app_path: Path) -> None:
+    """Build and push a linux/amd64 single-arch image directly with buildx.
+
+    This is used on Apple Silicon machines where the default heroku container:push
+    produces multi-arch manifest lists that Heroku's registry doesn't support.
+     
+    Args:
+        app_name: The Heroku app name (with environment suffix)
+        app_path: Path to the application directory
+    """
+
+    # Build and push in one step – avoids cross-repo mount optimisation
+    subprocess.run(
+        [
+            "docker", "buildx", "build",
+            "--platform", "linux/amd64",
+            "--push",          # stream layers directly to prod app repo
+            "--no-cache",      # guarantee fresh digests, no mounts
+            "--provenance=false",
+            "-t", f"registry.heroku.com/{app_name}/web",
+            ".",
+        ],
+        check=True,
+        cwd=app_path,
+    )
+    # Release the image
+    subprocess.run(
+        ["heroku", "container:release", "web", "--app", app_name],
+        check=True,
+        cwd=app_path,
+    )
+
+
 def create_heroku_app(
     app_name: str,
+    base_app_name: str,
     team_name: Optional[str] = None,
     private_space: Optional[str] = None,
     routing: Optional[str] = None,
@@ -32,7 +68,9 @@ def create_heroku_app(
 
     Args:
         app_name: str
-            The name of the app to create
+            The name of the Heroku app to create (may include environment suffix)
+        base_app_name: str
+            The base app name without environment suffix
         team_name: Optional[str]
             The name of the team to create the app in
         private_space: Optional[str]
@@ -75,7 +113,8 @@ def create_heroku_app(
             # parse JSON response
             app_data = json.loads(COLOR_PATTERN.sub("", result.stdout))
             heroku_config = {
-                "app_name": app_data.get("name", ""),
+                "app_name": base_app_name,
+                "heroku_app_name": app_data.get("name", ""),
                 "public_url": app_data.get("web_url", ""),
                 "git_url": app_data.get("git_url", ""),
                 "team_name": app_data.get("team", ""),
@@ -141,19 +180,42 @@ def deploy_to_heroku(path: Union[str, Path], **kwargs: Any) -> BaseResponse:
     """Deploy the current app to Heroku.
 
     Args:
-        app_path: The path to the app.
+        path: The path to the app.
         commit_message: The commit message.
         branch: The branch to deploy to.
     """
     ctx = ctx_mgr.read_context()
     app_path = Path(path).resolve()
     app_name = ctx.get("app_name")
+    heroku_app_name = ctx.get("heroku_app_name") or app_name  # fallback to app_name if heroku_app_name not set
     commit_message = kwargs.get("commit_message")
     branch = kwargs.get("branch")
     deployment_type = ctx.get("deployment_type") or "buildpack"
 
+    # Always clear local Heroku-registry images to prevent cross-repo mounts
+    try:
+        imgs = (
+            subprocess.check_output(
+                [
+                    "docker",
+                    "images",
+                    "--filter",
+                    "reference=registry.heroku.com/*",
+                    "--quiet",
+                ]
+            )
+            .decode()
+            .strip()
+            .splitlines()
+        )
+        if imgs:
+            subprocess.run(["docker", "rmi", "-f", *imgs], check=False)
+    except Exception:
+        # Non-fatal – continue even if prune fails
+        pass
+
     console.print(
-        f"{ROCKET_EMOJI} Deploying {app_name} to Heroku using "
+        f"{ROCKET_EMOJI} Deploying {heroku_app_name} to Heroku using "
         f"{deployment_type} deployment type..."
     )
 
@@ -184,7 +246,7 @@ def deploy_to_heroku(path: Union[str, Path], **kwargs: Any) -> BaseResponse:
             text=True,
             check=False,
         )
-
+        
         if changes.stdout.strip():
             subprocess.run(["git", "add", "."], cwd=app_path, check=True)
             subprocess.run(
@@ -194,34 +256,42 @@ def deploy_to_heroku(path: Union[str, Path], **kwargs: Any) -> BaseResponse:
             console.print("No changes to commit.")
 
         subprocess.run(["git", "push", "heroku", branch], cwd=app_path, check=True)
+        
         return BaseResponse(
             success=True,
             message="Deployed to Heroku",
         )
-
+        
     elif deployment_type == "container":
         # Set stack to container
         subprocess.run(
-            ["heroku", "stack:set", "container", "--app", app_name],
+            ["heroku", "stack:set", "container", "--app", heroku_app_name],
             cwd=app_path,
             check=True,
         )
         # login to heroku container registry
         subprocess.run(["heroku", "container:login"], cwd=app_path, check=True)
-        # push the changes to the branch/heroku
-        subprocess.run(
-            ["heroku", "container:push", "web", "--app", app_name],
-            cwd=app_path,
-            check=True,
-        )
-        subprocess.run(
-            ["heroku", "container:release", "web", "--app", app_name],
-            cwd=app_path,
-            check=True,
-        )
+        
+        # Check if we're on Apple Silicon and use the appropriate method
+        if platform.machine() in ['arm64', 'aarch64']:
+            console.print("Apple Silicon detected - using environment variables for Heroku compatibility...")
+            _push_with_buildx(heroku_app_name, app_path)
+        else:
+            # Standard heroku container:push for Intel machines
+            subprocess.run(
+                ["heroku", "container:push", "web", "--app", heroku_app_name],
+                cwd=app_path,
+                check=True,
+            )
+            subprocess.run(
+                ["heroku", "container:release", "web", "--app", heroku_app_name],
+                cwd=app_path,
+                check=True,
+            )
+
         return BaseResponse(
             success=True,
-            message="Deployed to Heroku",
+            message="Container deployed successfully",
         )
     else:
         return BaseResponse(

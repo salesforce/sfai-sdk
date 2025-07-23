@@ -29,13 +29,21 @@ class HerokuPlatform(BasePlatform):
             return BaseResponse(success=False, error="Heroku CLI not installed.")
 
         app_name = context.get("app_name", "")
+        
+        # Extract base app name by removing any existing environment suffix
+        # This handles cases where app_name already contains an environment suffix
+        base_app_name = app_name
+        current_env = context.get("active_environment", "")
+        if current_env and current_env != "default" and app_name.endswith(f"-{current_env}"):
+            base_app_name = app_name[:-len(f"-{current_env}")]
+        
         environment = (
             kwargs.get("environment") or context.get("environment") or "default"
         )
         if environment != "default":
-            heroku_app_name = f"{app_name}-{environment}"
+            heroku_app_name = f"{base_app_name}-{environment}"
         else:
-            heroku_app_name = app_name
+            heroku_app_name = base_app_name
         team_name = kwargs.get("team_name") or context.get("team_name", "")
         private_space = kwargs.get("private_space") or context.get("private_space", "")
         deployment_type = kwargs.get("deployment_type") or "buildpack"
@@ -61,7 +69,7 @@ class HerokuPlatform(BasePlatform):
                 )
                 # Create new app when access is forbidden
                 return create_heroku_app(
-                    heroku_app_name, team_name, private_space, routing, deployment_type
+                    heroku_app_name, base_app_name, team_name, private_space, routing, deployment_type
                 )
             else:
                 # App exists and have access
@@ -71,6 +79,7 @@ class HerokuPlatform(BasePlatform):
                 )
 
                 heroku_config = {
+                    "app_name": base_app_name,
                     "heroku_app_name": heroku_app_name,
                     "public_url": app_info["app"]["web_url"],
                     "git_url": app_info["app"]["git_url"],
@@ -96,7 +105,7 @@ class HerokuPlatform(BasePlatform):
         except subprocess.CalledProcessError:
             # Create new app when command fails
             return create_heroku_app(
-                heroku_app_name, team_name, private_space, routing, deployment_type
+                heroku_app_name, base_app_name, team_name, private_space, routing, deployment_type
             )
 
     @with_context
