@@ -53,3 +53,13 @@ repos:
         language: system
         types: [jupyter]
         exclude: ^doc/
+
+      - id: pytest
+        name: pytest
+        description: Run unit tests with pytest
+        entry: pytest
+        language: system
+        pass_filenames: false
+        types: [python]
+        args: [tests/unit/, -v]
+        stages: [pre-push]

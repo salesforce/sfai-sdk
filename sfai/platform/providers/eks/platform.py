@@ -269,9 +269,14 @@ class EKSPlatform(BasePlatform):
                 ctx_mgr.update_platform(
                     platform="eks",
                     values={"public_url": public_url, "image_tag": version},
+                    environment=context.get("active_environment", "default"),
                 )
             else:
-                ctx_mgr.update_platform(platform="eks", values={"image_tag": version})
+                ctx_mgr.update_platform(
+                    platform="eks",
+                    values={"image_tag": version},
+                    environment=context.get("active_environment", "default"),
+                )
             return BaseResponse(
                 success=True,
                 message=f"Deployed {app_name}:{version} to {namespace}",

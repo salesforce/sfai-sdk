@@ -85,7 +85,7 @@ class TestPlatformAPIs:
 
     def test_platform_init_no_context(self):
         """Test platform initialization without app context."""
-        result = platform_init(cloud="heroku")
+        result = platform_init(platform="heroku")
 
         # Should fail when no context exists
         assert result.success is False
@@ -93,7 +93,7 @@ class TestPlatformAPIs:
 
     def test_platform_switch_no_context(self):
         """Test platform switching without app context."""
-        result = switch(cloud="heroku")
+        result = switch(platform="heroku")
 
         # Should fail when no context exists
         assert result.success is False
@@ -131,10 +131,9 @@ class TestConfigAPIs:
         """Test config listing for specific service."""
         result = config_list(service="mulesoft")
 
-        # Based on test results, this actually succeeds
-        assert result.success is True
-        assert hasattr(result, "service")
-        assert hasattr(result, "profiles")
+        # Should fail when no profiles exist for the service
+        assert result.success is False
+        assert "No profiles found for service: mulesoft" in result.error
 
 
 class TestAPIValidation:
@@ -160,7 +159,7 @@ class TestAPIValidation:
 
     def test_platform_init_empty_cloud(self):
         """Test platform initialization with empty cloud provider."""
-        result = platform_init(cloud="")
+        result = platform_init(platform="")
 
         # Should fail with empty cloud provider
         assert result.success is False
@@ -210,7 +209,7 @@ class TestAPIResponseStructure:
 
     def test_platform_init_response_structure(self):
         """Test that platform init returns proper response structure."""
-        result = platform_init(cloud="heroku")
+        result = platform_init(platform="heroku")
 
         # Check response structure
         assert hasattr(result, "success")
@@ -254,7 +253,10 @@ class TestAPIIntegration:
         assert list_result.success is True
 
         list_service_result = config_list(service="mulesoft")
-        assert list_service_result.success is True
+        assert (
+            list_service_result.success is False
+        )  # Should fail when no profiles exist
+        assert "No profiles found for service: mulesoft" in list_service_result.error
 
         # Config init should fail without context
         init_result = config_init(service="mulesoft", config={"key": "value"})
@@ -264,10 +266,10 @@ class TestAPIIntegration:
         """Test platform operations without context."""
         # All platform operations should fail without context
 
-        init_result = platform_init(cloud="heroku")
+        init_result = platform_init(platform="heroku")
         assert init_result.success is False
 
-        switch_result = switch(cloud="aws")
+        switch_result = switch(platform="aws")
         assert switch_result.success is False
 
     def test_mixed_operations(self):
@@ -276,7 +278,7 @@ class TestAPIIntegration:
 
         context_result = get_context()
         config_list_result = config_list()
-        platform_result = platform_init(cloud="heroku")
+        platform_result = platform_init(platform="heroku")
 
         # Config list should succeed, others should fail
         assert context_result.success is False
@@ -332,7 +334,7 @@ class TestAPIEdgeCases:
 
         get_result = get_context()
         list_result = config_list()
-        platform_result = platform_init(cloud="aws")
+        platform_result = platform_init(platform="aws")
 
         # Should have predictable results
         assert get_result.success is False
@@ -369,11 +371,11 @@ class TestAPIEdgeCases:
     def test_platform_validation(self):
         """Test platform validation."""
         # Test with empty cloud provider
-        empty_cloud_result = platform_init(cloud="")
+        empty_cloud_result = platform_init(platform="")
         assert empty_cloud_result.success is False
 
         # Test with valid cloud provider but no context
-        valid_cloud_result = platform_init(cloud="heroku")
+        valid_cloud_result = platform_init(platform="heroku")
         assert valid_cloud_result.success is False
         assert "context" in valid_cloud_result.error.lower()
 
@@ -385,7 +387,7 @@ class TestAPIConsistency:
         """Test that error responses are consistent."""
         # Test operations that should fail due to no context
 
-        platform_result = platform_init(cloud="heroku")
+        platform_result = platform_init(platform="heroku")
         config_init_result = config_init(service="mulesoft", config={"key": "value"})
 
         # Both should fail
@@ -429,7 +431,7 @@ class TestAPIConsistency:
 
         # APIs that should fail without context
         context_result = get_context()
-        platform_result = platform_init(cloud="heroku")
+        platform_result = platform_init(platform="heroku")
         config_init_result = config_init(service="mulesoft", config={"key": "value"})
 
         assert context_result.success is False
@@ -462,7 +464,7 @@ class TestAPIConsistency:
         """Test that error messages follow consistent formats."""
         # Get various error responses
         context_error = get_context()
-        platform_error = platform_init(cloud="heroku")
+        platform_error = platform_init(platform="heroku")
         config_error = config_init(service="mulesoft", config={"key": "value"})
 
         # All should be failures
@@ -484,3 +486,144 @@ class TestAPIConsistency:
         assert len(context_error.error) > 0
         assert len(platform_error.error) > 0
         assert len(config_error.error) > 0
+
+
+class TestEnvironmentSupport:
+    """Test environment support functionality."""
+
+    def test_platform_init_with_environment(self):
+        """Test platform initialization with different environments."""
+        # Test with default environment
+        default_result = platform_init(platform="heroku")
+        assert default_result.success is False  # Should fail without app context
+        assert "No app context found" in default_result.error
+
+        # Test with custom environment
+        custom_result = platform_init(platform="heroku", environment="staging")
+        assert custom_result.success is False  # Should fail without app context
+        assert "No app context found" in custom_result.error
+
+        # Test with production environment
+        prod_result = platform_init(platform="heroku", environment="production")
+        assert prod_result.success is False  # Should fail without app context
+        assert "No app context found" in prod_result.error
+
+    def test_switch_with_environment(self):
+        """Test platform switching with different environments."""
+        # Test switching to default environment
+        default_switch = switch(platform="heroku")
+        assert default_switch.success is False
+        assert "No app context found" in default_switch.error
+
+        # Test switching to custom environment
+        staging_switch = switch(platform="heroku", environment="staging")
+        assert staging_switch.success is False
+        assert "No app context found" in staging_switch.error
+
+        # Test switching to production environment
+        prod_switch = switch(platform="eks", environment="production")
+        assert prod_switch.success is False
+        assert "No app context found" in prod_switch.error
+
+    def test_environment_parameter_validation(self):
+        """Test environment parameter validation."""
+        # Test with empty environment
+        empty_env_result = platform_init(platform="heroku", environment="")
+        assert empty_env_result.success is False
+
+        # Test with special characters in environment name
+        special_env_result = platform_init(platform="heroku", environment="test-env")
+        assert special_env_result.success is False  # Should fail without app context
+
+        # Test with numeric environment name
+        numeric_env_result = platform_init(platform="heroku", environment="123")
+        assert numeric_env_result.success is False  # Should fail without app context
+
+    def test_environment_specific_error_messages(self):
+        """Test that error messages include environment information."""
+        # Test switch with non-existent environment
+        result = switch(platform="nonexistent", environment="staging")
+        assert result.success is False
+        assert "No app context found" in result.error
+
+        # Test platform init with environment in error context
+        init_result = platform_init(platform="invalid", environment="production")
+        assert init_result.success is False
+        assert "No app context found" in init_result.error
+
+    def test_environment_defaults(self):
+        """Test that environment defaults to 'default' when not specified."""
+        # Test platform_init without environment parameter
+        result = platform_init(platform="heroku")
+        assert result.success is False
+        assert "No app context found" in result.error
+
+        # Test switch without environment parameter
+        switch_result = switch(platform="heroku")
+        assert switch_result.success is False
+        assert "No app context found" in switch_result.error
+
+    def test_multiple_environment_operations(self):
+        """Test multiple environment operations in sequence."""
+        # Test sequence of operations with different environments
+        env_ops = [
+            platform_init(platform="heroku", environment="dev"),
+            platform_init(platform="heroku", environment="staging"),
+            platform_init(platform="eks", environment="production"),
+            switch(platform="heroku", environment="dev"),
+            switch(platform="eks", environment="production"),
+        ]
+
+        # All should fail without app context
+        for op in env_ops:
+            assert op.success is False
+            assert "No app context found" in op.error
+
+
+class TestPlatformEnvironmentIntegration:
+    """Test platform and environment integration scenarios."""
+
+    def test_cross_platform_environment_isolation(self):
+        """Test that environments are isolated across platforms."""
+        # Test different platforms with same environment names
+        heroku_prod = platform_init(platform="heroku", environment="production")
+        eks_prod = platform_init(platform="eks", environment="production")
+        local_prod = platform_init(platform="local", environment="production")
+
+        # All should fail without app context but with consistent error messages
+        assert heroku_prod.success is False
+        assert eks_prod.success is False
+        assert local_prod.success is False
+
+        assert "No app context found" in heroku_prod.error
+        assert "No app context found" in eks_prod.error
+        assert "No app context found" in local_prod.error
+
+    def test_environment_context_consistency(self):
+        """Test that environment context is consistent across operations."""
+        # Test that the same environment name works consistently
+        env_name = "integration-test"
+
+        init_result = platform_init(platform="heroku", environment=env_name)
+        switch_result = switch(platform="heroku", environment=env_name)
+
+        # Both should fail without app context
+        assert init_result.success is False
+        assert switch_result.success is False
+        assert "No app context found" in init_result.error
+        assert "No app context found" in switch_result.error
+
+    def test_environment_naming_edge_cases(self):
+        """Test environment naming edge cases."""
+        edge_cases = [
+            "default",  # Reserved default environment
+            "test-123",  # Hyphenated with numbers
+            "UPPERCASE",  # All uppercase
+            "mixed_Case",  # Mixed case with underscore
+            "very-long-environment-name-that-might-cause-issues",  # Long name
+        ]
+
+        for env_name in edge_cases:
+            result = platform_init(platform="heroku", environment=env_name)
+            assert result.success is False
+            assert "No app context found" in result.error

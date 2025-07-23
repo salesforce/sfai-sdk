@@ -138,6 +138,7 @@ def deploy_to_minikube(path: str = ".", **kwargs: Any) -> None:
     ctx_mgr.update_platform(
         platform="local",
         values={"image": image_name, "image_tag": image_tag, "port": port},
+        environment=ctx.get("active_environment", "default"),
     )
     # Prepare Helm command with proper arguments
     helm_args = [
