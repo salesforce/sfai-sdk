@@ -9,7 +9,7 @@ def open(
     path: str = "/docs",
     port: int = 8080,
     tunnel: bool = False,
-    url: str | None = None,
+    url: Optional[str] = None,
     platform: Optional[str] = None,
     environment: Optional[str] = None,
 ) -> BaseResponse:

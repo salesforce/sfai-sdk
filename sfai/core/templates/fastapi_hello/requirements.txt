@@ -2,4 +2,4 @@ gunicorn>=23,<24
 uvicorn
 fastapi
 httpx
-PyYAML
+sfai-sdk>=0.012b

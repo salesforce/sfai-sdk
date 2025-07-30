@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 from sfai.context.manager import ContextManager
 from sfai.integrations.mulesoft.core import MulesoftAPI
 from rich.console import Console
@@ -11,7 +11,7 @@ ctx_mgr = ContextManager()
 
 def _get_mulesoft_client(
     profile_name: Optional[str] = None,
-) -> Optional[MulesoftAPI] | BaseResponse:
+) -> Union[Optional[MulesoftAPI], BaseResponse]:
     """
     Helper to create a MulesoftAPI client from context.
 

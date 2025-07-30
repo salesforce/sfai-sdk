@@ -1,6 +1,6 @@
 import inspect
 from fastapi import FastAPI
-from typing import Annotated, Any, get_origin, get_args
+from typing import Annotated, Any, get_origin, get_args, Optional
 from fastapi.openapi.utils import get_openapi
 
 from sfai.core.agentforce.decorators import (
@@ -59,7 +59,7 @@ def custom_openapi(app: FastAPI) -> dict[str, Any]:
             fn = route.endpoint
 
             # 1) operation-level metadata
-            meta_op: AgentForceActionRouteMetadata | None = getattr(
+            meta_op: Optional[AgentForceActionRouteMetadata] = getattr(
                 fn, AgentForceActionRouteMetadata.ATTRIBUTE_NAME, None
             )
             if meta_op:

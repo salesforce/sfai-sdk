@@ -1,7 +1,7 @@
 import requests
 import time
 from requests.auth import HTTPBasicAuth
-from typing import Any
+from typing import Any, Optional
 from sfai.core.response_models import BaseResponse
 
 
@@ -38,7 +38,7 @@ class MulesoftAPI:
             self._session = auth_result
             self.auth_error = None
 
-    def _check_auth(self) -> BaseResponse | None:
+    def _check_auth(self) -> Optional[BaseResponse]:
         if self.auth_error:
             return self.auth_error
         return None
@@ -78,9 +78,9 @@ class MulesoftAPI:
         self,
         path: str,
         method: str,
-        headers: dict | None = None,
-        body: dict | None = None,
-        files: dict | None = None,
+        headers: Optional[dict] = None,
+        body: Optional[dict] = None,
+        files: Optional[dict] = None,
     ) -> Any:
         """
         Wrapper around MuleSoft API calls.
@@ -108,7 +108,7 @@ class MulesoftAPI:
         return response.json()
 
     def search_exchange_assets(
-        self, name_filter: str | None = None
+        self, name_filter: Optional[str] = None
     ) -> list[dict[str, Any]]:
         """
         Search Exchange for assets.
@@ -147,7 +147,7 @@ class MulesoftAPI:
         name: str,
         version: str,
         oas_file: str,
-        tags: list[str] | None = None,
+        tags: Optional[list[str]] = None,
         description: str = "",
     ) -> dict[str, Any]:
         """
@@ -196,7 +196,7 @@ class MulesoftAPI:
 
     def _find_existing_api(
         self, name: str, endpoint_path: str
-    ) -> dict[str, Any] | None:
+    ) -> Optional[dict[str, Any]]:
         """
         Find an existing API based on name and endpoint path.
 
