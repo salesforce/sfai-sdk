@@ -1,10 +1,9 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
-from typing import Annotated
 
 # Import AgentForce decorators for MuleSoft integration
-from sfai.core.agentforce import AgentForceMetadata, agentforce_action
+from sfai.core.agentforce import agentforce_action
 
 app = FastAPI(
     title="SFAI Template",
@@ -37,20 +36,11 @@ def health():
 
 @app.post("/invocation")
 @agentforce_action(publish_as_agent_action=True)
-def invoke(
-    request: Annotated[
-        InvocationRequest,
-        AgentForceMetadata(is_user_input=True, description="request body description"),
-    ],
-) -> Annotated[
-    InvocationResponse,
-    AgentForceMetadata(is_displayable=True, description="Successful response"),
-]:
+def invoke(request: InvocationRequest) -> InvocationResponse:
     """
     Invoke endpoint
 
-    Example endpoint showing AgentForce decorator and metadata usage.
-    This will automatically generate proper OpenAPI spec for MuleSoft publishing.
+    This endpoint will be published to MuleSoft/AgentForce.
     """
     return InvocationResponse(
         customerId=request.account_id, prediction="sample prediction"
