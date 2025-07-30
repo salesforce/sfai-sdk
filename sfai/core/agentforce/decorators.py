@@ -3,7 +3,7 @@ AgentForce decorators and metadata classes for FastAPI applications.
 """
 
 from pydantic import BaseModel
-from typing import ClassVar
+from typing import ClassVar, Callable
 
 
 class AgentForceMetadata:
@@ -33,16 +33,19 @@ class AgentForceActionRouteMetadata(BaseModel):
 
 
 def agentforce_action(
-    _fn=None, *, publish_as_agent_action: bool = True, is_pii: bool | None = None
-):
+    _fn: Callable | None = None,
+    *,
+    publish_as_agent_action: bool = True,
+    is_pii: bool | None = None,
+) -> Callable:
     """
     Use on each @app.<method> to set:
       - x-sfdc/agent/action/publishAsAgentAction
       - x-sfdc/agent/action/isPii  (optional)
-    Supports both @agentforce_action  and  @agentforce_action(is_pii=True)
+    Supports both @AgentforceAction  and  @AgentforceAction(is_pii=True)
     """
 
-    def decorator(fn):
+    def decorator(fn: Callable) -> Callable:
         setattr(
             fn,
             AgentForceActionRouteMetadata.ATTRIBUTE_NAME,

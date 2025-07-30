@@ -33,6 +33,7 @@ dependencies = [
   'kubernetes>=27.2.0',
   'termcolor>=2.0.0',
   'requests',
+  'fastapi>=0.100.0',
 ]
 
 [project.scripts]
@@ -92,7 +93,6 @@ exclude = '''
   | buck-out
   | build
   | dist
-  | setup.py
 )
 '''
 line-length = 88

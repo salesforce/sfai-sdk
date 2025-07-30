@@ -1,7 +1,3 @@
-"""
-Utilities for detecting AgentForce decorators and generating OpenAPI specs.
-"""
-
 import os
 import sys
 import importlib.util
@@ -9,7 +5,7 @@ import yaml
 from pathlib import Path
 
 from sfai.core.response_models import BaseResponse
-from sfai.core.agentforce.generator import generate_agentforce_openapi
+from sfai.core.agentforce.generator import custom_openapi
 from rich.console import Console
 
 console = Console()
@@ -90,7 +86,7 @@ def generate_openapi_from_app(app_file: str = "app.py") -> BaseResponse:
             )
 
         # Generate OpenAPI schema with AgentForce extensions
-        openapi_schema = generate_agentforce_openapi(app)
+        openapi_schema = custom_openapi(app)
 
         # Save to openapi.yaml
         output_file = "openapi.yaml"
