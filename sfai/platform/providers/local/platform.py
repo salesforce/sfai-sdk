@@ -114,7 +114,11 @@ class LocalPlatform(BasePlatform):
                 ["docker", "logs", app_name], capture_output=True, text=True, check=True
             )
             console.print(f"{SEARCH_EMOJI} Logs for {app_name}:")
-            console.print(result.stdout)
+            if result.stdout:
+                console.print(result.stdout)
+            if result.stderr:
+                console.print("[red]STDERR:[/red]")
+                console.print(result.stderr)
 
             return BaseResponse(success=True, message="Logs retrieved")
         except Exception as e:

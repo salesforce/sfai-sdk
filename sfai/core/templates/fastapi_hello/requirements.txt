@@ -2,3 +2,4 @@ gunicorn>=23,<24
 uvicorn
 fastapi
 httpx
+PyYAML

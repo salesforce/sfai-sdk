@@ -1,9 +1,11 @@
+import os
 from typing import Dict, Any
 from sfai.context.manager import ContextManager
 from sfai.core.base import BaseIntegration
 from sfai.core.response_models import BaseResponse
 from sfai.core.decorators import with_context
 from sfai.integrations.mulesoft.utils import _get_mulesoft_client
+from sfai.integrations.mulesoft.agentforce_utils import generate_openapi_from_app
 
 ctx_mgr = ContextManager()
 
@@ -45,7 +47,24 @@ class MuleSoftIntegration(BaseIntegration):
         elif not version:
             version = "1.0.0"
         oas_file = kwargs.get("oas_file") or asset.get("oas_file", "openapi.yaml")
-        if not oas_file:
+
+        # Check if we need to auto-generate OpenAPI spec
+        if not os.path.exists(oas_file):
+            # Try to auto-generate from app.py with AgentForce decorators
+            generation_result = generate_openapi_from_app("app.py")
+            if not generation_result.success:
+                return BaseResponse(
+                    success=False,
+                    error=(
+                        f"OAS file not found and auto-generation failed: "
+                        f"{generation_result.error}"
+                    ),
+                )
+
+            # Update oas_file to the generated file
+            oas_file = generation_result.data.get("openapi_file", "openapi.yaml")
+
+        if not oas_file or not os.path.exists(oas_file):
             return BaseResponse(
                 success=False,
                 error="OAS file not found",
