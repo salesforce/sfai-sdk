@@ -138,6 +138,7 @@ class MuleSoftIntegration(BaseIntegration):
 
         ctx_mgr.update_platform(
             platform=ctx.get("active_platform"),
+            environment=ctx.get("active_environment"),
             values={
                 "mulesoft": {
                     "profile": profile_name,
@@ -177,6 +178,7 @@ class MuleSoftIntegration(BaseIntegration):
         # update context
         ctx_mgr.update_platform(
             platform=ctx.get("active_platform"),
+            environment=ctx.get("active_environment"),
             values={
                 "mulesoft": {
                     "profile": profile_name,

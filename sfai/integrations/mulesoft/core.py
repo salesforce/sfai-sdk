@@ -182,9 +182,11 @@ class MulesoftAPI:
             publication_status = self._make_api_call(
                 status_link.removeprefix(f"{self.base_url}/"), "get"
             )
+            print(f"Publication status check: {publication_status}")  # Debug logging
             if publication_status["status"] != "running":
                 break
             time.sleep(1)
+        print(f"Final publication status: {publication_status}")  # Debug logging
         return publication_status
 
     def list_published_apis(self) -> list[dict[str, Any]]:

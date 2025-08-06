@@ -22,10 +22,13 @@ class InvocationResponse(BaseModel):
     prediction: str
 
 
-@app.api_route(
-    "/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"]
-)
-async def proxy(request: Request, path: str):
+@app.get("/")
+async def root():
+    return PlainTextResponse("Hello SFAI Users!")
+
+
+@app.get("/{path:path}")
+async def catch_all_get(path: str):
     return PlainTextResponse("Hello SFAI Users!")
 
 

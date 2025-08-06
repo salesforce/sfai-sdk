@@ -6,6 +6,7 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 from sfai.context.manager import ContextManager
 from sfai.integrations.registry import INTEGRATION_REGISTRY
+from sfai.integrations.mulesoft.agentforce_utils import detect_agentforce_usage
 from sfai.constants import ROCKET_EMOJI
 
 ctx_mgr = ContextManager()
@@ -62,6 +63,22 @@ def publish_cli(
         )
         return
 
+    # Check for AgentForce decorators to determine if we can auto-generate OpenAPI
+    can_auto_generate = detect_agentforce_usage("app.py")
+    if can_auto_generate:
+        console.print(
+            "[green]AgentForce decorators detected - OpenAPI will be auto-generated[/]"
+        )
+    else:
+        console.print(
+            "[yellow]Warning: AgentForce decorators not found in app.py - "
+            "OpenAPI spec cannot be auto-generated automatically[/]"
+        )
+        console.print(
+            "[dim]Add @agentforce_action decorators to your endpoints "
+            "to enable auto-generation[/]"
+        )
+
     # Collect all inputs
     if interactive:
         name = Prompt.ask("Asset/API name", default=asset.get("name") or app_name)
@@ -83,9 +100,17 @@ def publish_cli(
                     )
             else:
                 version = Prompt.ask("Enter the asset version", default="1.0.0")
-        oas_file = Prompt.ask(
-            "OpenAPI spec file", default=asset.get("oas_file", "openapi.yaml")
-        )
+
+        # Only ask for OpenAPI file if we can't auto-generate
+        if can_auto_generate:
+            oas_file = "openapi.yaml"  # Will be auto-generated
+            console.print(
+                "📄 [dim]OpenAPI spec will be auto-generated from decorators[/]"
+            )
+        else:
+            oas_file = Prompt.ask(
+                "OpenAPI spec file", default=asset.get("oas_file", "openapi.yaml")
+            )
         description = Prompt.ask("Description", default=asset.get("description", ""))
         tags_input = Prompt.ask("Tags", default="sf-api-catalog, sf-api-topic")
         tags = [t.strip() for t in tags_input.split(",")]
@@ -115,7 +140,12 @@ def publish_cli(
                 console.print(f"[bold red]Error parsing version: {e}[/]")
         elif not version:
             version = "1.0.0"
-        oas_file = asset.get("oas_file", "openapi.yaml")
+
+        # Set OpenAPI file - will be auto-generated if decorators are present
+        if can_auto_generate:
+            oas_file = "openapi.yaml"  # Will be auto-generated
+        else:
+            oas_file = asset.get("oas_file", "openapi.yaml")
         description = asset.get("description", "")
         tags = asset.get("tags", ["sf-api-catalog", "sf-api-topic"])
         if isinstance(tags, str):
@@ -143,7 +173,8 @@ def publish_cli(
                 "Enter the Flex Gateway Version", default=api.get("gateway_version")
             )
 
-    if not os.path.exists(oas_file):
+    # Only check if file exists if we're not auto-generating
+    if not can_auto_generate and not os.path.exists(oas_file):
         console.print(f"[bold red]OpenAPI spec file not found: {oas_file}[/]")
         return
 
