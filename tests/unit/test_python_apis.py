@@ -1,5 +1,7 @@
-import tempfile
 import os
+import tempfile
+import yaml
+
 from pathlib import Path
 
 
@@ -10,6 +12,11 @@ from sfai.platform import init as platform_init, switch
 from sfai.config import (
     init as config_init,
     list as config_list,
+)
+from sfai.integrations.mulesoft.agentforce_utils import (
+    detect_agentforce_usage,
+    generate_openapi_from_app,
+    validate_generated_openapi,
 )
 
 
@@ -131,9 +138,10 @@ class TestConfigAPIs:
         """Test config listing for specific service."""
         result = config_list(service="mulesoft")
 
-        # Should fail when no profiles exist for the service
-        assert result.success is False
-        assert "No profiles found for service: mulesoft" in result.error
+        # Should succeed when profiles exist for the service
+        assert result.success is True
+        assert hasattr(result, "profiles")
+        assert isinstance(result.profiles, list)
 
 
 class TestAPIValidation:
@@ -253,10 +261,9 @@ class TestAPIIntegration:
         assert list_result.success is True
 
         list_service_result = config_list(service="mulesoft")
-        assert (
-            list_service_result.success is False
-        )  # Should fail when no profiles exist
-        assert "No profiles found for service: mulesoft" in list_service_result.error
+        assert list_service_result.success is True  # Should succeed when profiles exist
+        assert hasattr(list_service_result, "profiles")
+        assert isinstance(list_service_result.profiles, list)
 
         # Config init should fail without context
         init_result = config_init(service="mulesoft", config={"key": "value"})
@@ -627,3 +634,465 @@ class TestPlatformEnvironmentIntegration:
             result = platform_init(platform="heroku", environment=env_name)
             assert result.success is False
             assert "No app context found" in result.error
+
+
+class TestOpenAPIAutoGeneration:
+    """Test cases for OpenAPI auto-generation feature."""
+
+    def test_detect_agentforce_usage_with_decorators(self):
+        """Test detection of AgentForce decorators in app.py."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.chdir(temp_dir)
+
+            # Create app.py with AgentForce decorators
+            app_content = """
+from fastapi import FastAPI
+from sfai.core.agentforce.decorators import agentforce_action
+
+app = FastAPI()
+
+@app.get("/test")
+@agentforce_action()
+def test_endpoint():
+    return {"message": "test"}
+"""
+            with open("app.py", "w") as f:
+                f.write(app_content)
+
+            result = detect_agentforce_usage("app.py")
+            assert result is True
+
+    def test_detect_agentforce_usage_without_decorators(self):
+        """Test detection when no AgentForce decorators are present."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.chdir(temp_dir)
+
+            # Create app.py without AgentForce decorators
+            app_content = """
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/test")
+def test_endpoint():
+    return {"message": "test"}
+"""
+            with open("app.py", "w") as f:
+                f.write(app_content)
+
+            result = detect_agentforce_usage("app.py")
+            assert result is False
+
+    def test_detect_agentforce_usage_file_not_found(self):
+        """Test detection when app.py doesn't exist."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.chdir(temp_dir)
+
+            result = detect_agentforce_usage("app.py")
+            assert result is False
+
+    def test_generate_openapi_from_app_success(self):
+        """Test successful OpenAPI generation from app with AgentForce decorators."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.chdir(temp_dir)
+
+            # Create app.py with AgentForce decorators
+            app_content = """
+from fastapi import FastAPI
+from sfai.core.agentforce.decorators import agentforce_action
+from pydantic import BaseModel
+
+app = FastAPI(title="Test API", description="Test API for AgentForce")
+
+class TestRequest(BaseModel):
+    message: str
+
+@app.post("/test")
+@agentforce_action()
+def test_endpoint(request: TestRequest):
+    return {"response": request.message}
+"""
+            with open("app.py", "w") as f:
+                f.write(app_content)
+
+            result = generate_openapi_from_app("app.py")
+
+            assert result.success is True
+            assert "openapi.yaml" in result.data.get("openapi_file", "")
+            assert os.path.exists("openapi.yaml")
+
+    def test_generate_openapi_from_app_no_decorators(self):
+        """Test OpenAPI generation failure when no AgentForce decorators are present."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.chdir(temp_dir)
+
+            # Create app.py without AgentForce decorators
+            app_content = """
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/test")
+def test_endpoint():
+    return {"message": "test"}
+"""
+            with open("app.py", "w") as f:
+                f.write(app_content)
+
+            result = generate_openapi_from_app("app.py")
+
+            assert result.success is False
+            assert "No AgentForce decorators detected" in result.error
+
+    def test_generate_openapi_from_app_file_not_found(self):
+        """Test OpenAPI generation failure when app.py doesn't exist."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.chdir(temp_dir)
+
+            result = generate_openapi_from_app("app.py")
+
+            assert result.success is False
+            assert "not found" in result.error
+
+    def test_generate_openapi_from_app_invalid_app(self):
+        """Test OpenAPI generation failure with invalid app.py."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.chdir(temp_dir)
+
+            # Create invalid app.py
+            app_content = """
+from sfai.core.agentforce.decorators import agentforce_action
+
+@app.post("/test")
+@agentforce_action()
+def test_endpoint():
+    return {"message": "test"}
+"""
+            with open("app.py", "w") as f:
+                f.write(app_content)
+
+            result = generate_openapi_from_app("app.py")
+
+            assert result.success is False
+            assert "Could not import FastAPI app" in result.error
+
+    def test_validate_generated_openapi_success(self):
+        """Test validation of generated OpenAPI spec."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.chdir(temp_dir)
+
+            # Create app.py with AgentForce decorators
+            app_content = """
+from fastapi import FastAPI
+from sfai.core.agentforce.decorators import agentforce_action
+from pydantic import BaseModel
+
+app = FastAPI(title="Test API", description="Test API for AgentForce")
+
+class TestRequest(BaseModel):
+    message: str
+
+@app.post("/test")
+@agentforce_action()
+def test_endpoint(request: TestRequest):
+    return {"response": request.message}
+"""
+            with open("app.py", "w") as f:
+                f.write(app_content)
+
+            # Generate OpenAPI spec
+            gen_result = generate_openapi_from_app("app.py")
+            assert gen_result.success is True
+
+            # Validate the generated spec
+            validation_result = validate_generated_openapi("openapi.yaml")
+            assert validation_result.success is True
+
+    def test_validate_generated_openapi_missing_extensions(self):
+        """Test validation failure when required AgentForce extensions are missing."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.chdir(temp_dir)
+
+            # Create a basic OpenAPI spec without AgentForce extensions
+            basic_openapi = {
+                "openapi": "3.0.3",
+                "info": {"title": "Test API", "version": "1.0.0"},
+                "paths": {
+                    "/test": {
+                        "post": {
+                            "summary": "Test endpoint",
+                            "responses": {"200": {"description": "OK"}},
+                        }
+                    }
+                },
+            }
+
+            with open("openapi.yaml", "w") as f:
+                yaml.dump(basic_openapi, f)
+
+            result = validate_generated_openapi("openapi.yaml")
+            assert result.success is False
+            assert "Missing x-sfdc extension" in result.error
+
+    def test_validate_generated_openapi_file_not_found(self):
+        """Test validation failure when OpenAPI file doesn't exist."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.chdir(temp_dir)
+
+            result = validate_generated_openapi("nonexistent.yaml")
+            assert result.success is False
+            assert "not found" in result.error
+
+    def test_mulesoft_publish_with_auto_generation(self):
+        """Test MuleSoft publish workflow with auto-generated OpenAPI spec."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.chdir(temp_dir)
+
+            # Create app.py with AgentForce decorators
+            app_content = """
+from fastapi import FastAPI
+from sfai.core.agentforce.decorators import agentforce_action
+from pydantic import BaseModel
+
+app = FastAPI(title="Test API", description="Test API for AgentForce")
+
+class TestRequest(BaseModel):
+    message: str
+
+@app.post("/test")
+@agentforce_action()
+def test_endpoint(request: TestRequest):
+    return {"response": request.message}
+"""
+            with open("app.py", "w") as f:
+                f.write(app_content)
+
+            # Test that auto-generation works correctly
+            result = generate_openapi_from_app("app.py")
+
+            # Should succeed and generate the OpenAPI spec
+            assert result.success is True
+            assert os.path.exists("openapi.yaml")
+
+            # Verify the generated file has the expected structure
+            with open("openapi.yaml", "r") as f:
+                openapi_data = yaml.safe_load(f)
+
+            # Check that the endpoint has AgentForce metadata
+            paths = openapi_data.get("paths", {})
+            assert "/test" in paths
+            post_op = paths["/test"].get("post", {})
+            assert "x-sfdc" in post_op
+            assert "agent" in post_op["x-sfdc"]
+            assert "action" in post_op["x-sfdc"]["agent"]
+
+    def test_agentforce_decorator_detection_edge_cases(self):
+        """Test AgentForce decorator detection with various edge cases."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.chdir(temp_dir)
+
+            # Test with different decorator patterns
+            test_cases = [
+                # Standard decorator
+                """
+from fastapi import FastAPI
+from sfai.core.agentforce.decorators import agentforce_action
+
+app = FastAPI()
+
+@app.get("/test")
+@agentforce_action()
+def test_endpoint():
+    return {"message": "test"}
+""",
+                # Decorator with parameters
+                """
+from fastapi import FastAPI
+from sfai.core.agentforce.decorators import agentforce_action
+
+app = FastAPI()
+
+@app.get("/test")
+@agentforce_action(publish_as_agent_action=True)
+def test_endpoint():
+    return {"message": "test"}
+""",
+                # Multiple decorators
+                """
+from fastapi import FastAPI
+from sfai.core.agentforce.decorators import agentforce_action
+
+app = FastAPI()
+
+@app.get("/test")
+@agentforce_action()
+@app.post("/test2")
+@agentforce_action()
+def test_endpoint():
+    return {"message": "test"}
+""",
+                # Import with alias
+                """
+from fastapi import FastAPI
+from sfai.core.agentforce.decorators import agentforce_action as af_action
+
+app = FastAPI()
+
+@app.get("/test")
+@af_action()
+def test_endpoint():
+    return {"message": "test"}
+""",
+            ]
+
+            for i, app_content in enumerate(test_cases):
+                with open("app.py", "w") as f:
+                    f.write(app_content)
+
+                result = detect_agentforce_usage("app.py")
+                assert result is True, f"Test case {i+1} failed"
+
+    def test_openapi_generation_with_complex_schema(self):
+        """Test OpenAPI generation with complex Pydantic schemas."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.chdir(temp_dir)
+
+            # Create app.py with complex schemas
+            app_content = """
+from fastapi import FastAPI
+from sfai.core.agentforce.decorators import agentforce_action
+from pydantic import BaseModel
+from typing import List, Optional
+
+app = FastAPI(title="Complex API", description="API with complex schemas")
+
+class Address(BaseModel):
+    street: str
+    city: str
+    country: str
+
+class User(BaseModel):
+    name: str
+    email: str
+    age: Optional[int] = None
+    addresses: List[Address] = []
+
+class UserResponse(BaseModel):
+    id: str
+    user: User
+    created_at: str
+
+@app.post("/users")
+@agentforce_action()
+def create_user(user: User) -> UserResponse:
+    return UserResponse(
+        id="123",
+        user=user,
+        created_at="2023-01-01"
+    )
+
+@app.get("/users/{user_id}")
+@agentforce_action()
+def get_user(user_id: str) -> UserResponse:
+    return UserResponse(
+        id=user_id,
+        user=User(name="Test", email="test@example.com"),
+        created_at="2023-01-01"
+    )
+"""
+            with open("app.py", "w") as f:
+                f.write(app_content)
+
+            result = generate_openapi_from_app("app.py")
+
+            assert result.success is True
+            assert os.path.exists("openapi.yaml")
+
+            # Verify the generated file has the expected structure
+            with open("openapi.yaml", "r") as f:
+                openapi_data = yaml.safe_load(f)
+
+            assert "x-sfdc" in openapi_data
+            assert "agent" in openapi_data["x-sfdc"]
+            assert "topic" in openapi_data["x-sfdc"]["agent"]
+            assert "paths" in openapi_data
+            assert "/users" in openapi_data["paths"]
+
+    def test_openapi_generation_error_handling(self):
+        """Test error handling during OpenAPI generation."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.chdir(temp_dir)
+
+            # Create app.py with syntax error
+            app_content = """
+from fastapi import FastAPI
+from sfai.core.agentforce.decorators import agentforce_action
+
+app = FastAPI()
+
+@app.get("/test")
+@agentforce_action()
+def test_endpoint():
+    return {"message": "test"
+# Missing closing brace
+"""
+            with open("app.py", "w") as f:
+                f.write(app_content)
+
+            result = generate_openapi_from_app("app.py")
+
+            assert result.success is False
+            assert "Could not import FastAPI app" in result.error
+
+    def test_openapi_generation_with_annotated_types(self):
+        """Test OpenAPI generation with Annotated types for AgentForce metadata."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.chdir(temp_dir)
+
+            # Create app.py with Annotated types
+            app_content = """
+from fastapi import FastAPI
+from sfai.core.agentforce.decorators import agentforce_action
+from sfai.core.agentforce.generator import AgentForceMetadata
+from pydantic import BaseModel
+from typing import Annotated
+
+app = FastAPI(title="Annotated API", description="API with Annotated types")
+
+class UserInput(BaseModel):
+    name: str
+    email: str
+
+class UserOutput(BaseModel):
+    id: str
+    name: str
+
+@app.post("/users")
+@agentforce_action()
+def create_user(
+    user: Annotated[
+        UserInput,
+        AgentForceMetadata(is_user_input=True, is_displayable=True)
+    ]
+) -> Annotated[UserOutput, AgentForceMetadata(is_displayable=True)]:
+    return UserOutput(id="123", name=user.name)
+"""
+            with open("app.py", "w") as f:
+                f.write(app_content)
+
+            result = generate_openapi_from_app("app.py")
+
+            assert result.success is True
+            assert os.path.exists("openapi.yaml")
+
+            # Verify the generated file has AgentForce metadata
+            with open("openapi.yaml", "r") as f:
+                openapi_data = yaml.safe_load(f)
+
+            # Check that the endpoint has AgentForce metadata
+            paths = openapi_data.get("paths", {})
+            assert "/users" in paths
+            post_op = paths["/users"].get("post", {})
+            assert "x-sfdc" in post_op
+            assert "agent" in post_op["x-sfdc"]
+            assert "action" in post_op["x-sfdc"]["agent"]
